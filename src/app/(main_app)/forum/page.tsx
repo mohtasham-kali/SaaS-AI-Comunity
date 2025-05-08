@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Link from 'next/link';
 import { PlusCircle, Search, ListFilter } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/components/auth/auth-provider'; // To ensure user is loaded for potential filtering/actions
+import { useAuth } from '@/components/auth/auth-provider'; 
 
 export default function ForumPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -22,7 +22,7 @@ export default function ForumPage() {
 
 
   useEffect(() => {
-    if (!authLoading) { // Fetch posts once auth state is resolved
+    if (!authLoading) { 
         const fetchedPosts = getMockPosts();
         setPosts(fetchedPosts);
         setIsLoading(false);
@@ -32,7 +32,9 @@ export default function ForumPage() {
   const filteredAndSortedPosts = posts
     .filter(post => 
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      post.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      post.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.user.name?.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
       if (sortBy === 'latest') {
@@ -51,14 +53,15 @@ export default function ForumPage() {
     return (
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <Skeleton className="h-10 w-full md:w-1/2" />
-          <div className="flex gap-2 w-full md:w-auto">
-            <Skeleton className="h-10 w-1/2 md:w-32" />
-            <Skeleton className="h-10 w-1/2 md:w-40" />
-          </div>
+          <Skeleton className="h-10 w-3/4 md:w-1/2" />
+          <Skeleton className="h-10 w-full md:w-36" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <Skeleton className="h-11 w-full md:flex-grow" />
+          <Skeleton className="h-11 w-full md:w-48" />
+        </div>
+        <div className="grid grid-cols-1 gap-6"> {/* Single column for cards as per image */}
+          {[...Array(3)].map((_, i) => ( // Reduced skeleton count for single column
             <CardSkeleton key={i} />
           ))}
         </div>
@@ -68,31 +71,31 @@ export default function ForumPage() {
 
   return (
     <div className="space-y-8">
-      <header className="flex flex-col md:flex-row justify-between items-center gap-6 pb-6 border-b">
+      <header className="flex flex-col md:flex-row justify-between items-center gap-4 pb-6 border-b border-border">
         <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">CodeAssist Forum</h1>
-            <p className="text-muted-foreground">Ask questions, share solutions, and learn with the community.</p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">CodeAssist Forum</h1>
+            {/* Sub-description removed to match image simplicity */}
         </div>
-        <Button asChild size="lg">
+        <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Link href="/new-post">
             <PlusCircle className="mr-2 h-5 w-5" /> New Post
           </Link>
         </Button>
       </header>
 
-      <div className="flex flex-col md:flex-row items-center gap-4 p-4 bg-card border rounded-lg shadow-sm">
-        <div className="relative flex-grow w-full md:max-w-md">
+      <div className="flex flex-col md:flex-row items-center gap-4">
+        <div className="relative flex-grow w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search posts by title or tags..."
+            placeholder="Search posts by title, tags, or content..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 h-11 text-base"
+            className="pl-10 pr-4 py-2 h-11 text-base bg-background md:bg-input border-border" // Ensure input background matches theme
           />
         </div>
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-full md:w-[180px] h-11 text-base">
+          <SelectTrigger className="w-full md:w-[180px] h-11 text-base bg-background md:bg-input border-border">
             <ListFilter className="mr-2 h-4 w-4 text-muted-foreground" />
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
@@ -105,15 +108,15 @@ export default function ForumPage() {
       </div>
 
       {filteredAndSortedPosts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6"> {/* Changed to single column */}
           {filteredAndSortedPosts.map(post => (
             <PostCard key={post.id} post={post} />
           ))}
         </div>
       ) : (
         <div className="text-center py-12">
-          <p className="text-xl text-muted-foreground">No posts found matching your criteria.</p>
-          {searchTerm && <p className="mt-2">Try adjusting your search or filter.</p>}
+          <p className="text-xl text-muted-foreground">No posts found.</p>
+          {searchTerm && <p className="mt-2 text-base text-muted-foreground">Try adjusting your search or filter.</p>}
         </div>
       )}
     </div>
@@ -121,25 +124,26 @@ export default function ForumPage() {
 }
 
 const CardSkeleton = () => (
-  <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6 space-y-4">
-    <div className="flex items-center space-x-3 mb-2">
-      <Skeleton className="h-10 w-10 rounded-full" />
-      <div>
-        <Skeleton className="h-4 w-24 mb-1" />
-        <Skeleton className="h-3 w-16" />
-      </div>
+  <div className="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6 space-y-4"> {/* Ensure border is subtle */}
+    <Skeleton className="h-6 w-3/4 mb-2" /> {/* Title */}
+    <div className="flex items-center space-x-2 mb-3">
+      <Skeleton className="h-6 w-6 rounded-full" /> {/* Avatar */}
+      <Skeleton className="h-4 w-20" /> {/* Author */}
+      <Skeleton className="h-4 w-24" /> {/* Time */}
     </div>
-    <Skeleton className="h-5 w-3/4" />
-    <Skeleton className="h-4 w-full" />
-    <Skeleton className="h-4 w-5/6" />
-    <div className="flex gap-2 mt-2">
+    <Skeleton className="h-4 w-full" /> {/* Description line 1 */}
+    <Skeleton className="h-4 w-5/6 mb-3" /> {/* Description line 2 */}
+    <div className="flex gap-2 mb-4">
         <Skeleton className="h-5 w-16 rounded-full" />
         <Skeleton className="h-5 w-20 rounded-full" />
+        <Skeleton className="h-5 w-18 rounded-full" />
     </div>
-    <div className="flex justify-between items-center pt-4 border-t mt-4">
-        <Skeleton className="h-4 w-20" />
-        <Skeleton className="h-4 w-16" />
+    <div className="flex justify-between items-center pt-4 border-t border-border mt-4"> {/* Subtle border top */}
+        <div className="flex gap-4">
+            <Skeleton className="h-5 w-12" /> {/* Upvotes */}
+            <Skeleton className="h-5 w-12" /> {/* Comments */}
+        </div>
+        <Skeleton className="h-9 w-28" /> {/* View Post Button */}
     </div>
   </div>
 );
-
