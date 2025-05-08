@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -22,7 +21,7 @@ import {
 } from '@/components/ui/sheet';
 import LogoIcon from '@/components/icons/logo-icon';
 import { useAuth } from '@/components/auth/auth-provider';
-import { Home, PlusCircle, User, LogOut, LogIn, Settings, Github, HelpCircle, Menu } from 'lucide-react';
+import { Home, PlusCircle, User, LogOut, LogIn, Settings, HelpCircle, Menu, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 
 const Navbar = () => {
@@ -33,12 +32,12 @@ const Navbar = () => {
     if (!name) return 'CA';
     const names = name.split(' ');
     if (names.length > 1) {
-      return names[0][0] + names[names.length - 1][0];
+      return names[0][0].toUpperCase() + names[names.length - 1][0].toUpperCase();
     }
-    return name.substring(0, 2);
+    return name.substring(0, 2).toUpperCase();
   };
 
-  const navLinks = [
+  const authenticatedNavLinks = [
     { href: "/", label: "Home", icon: Home },
     { href: "/new-post", label: "New Post", icon: PlusCircle },
     { href: "/#faq", label: "FAQ", icon: HelpCircle },
@@ -51,14 +50,16 @@ const Navbar = () => {
           <LogoIcon />
         </Link>
         
-        <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-          {navLinks.map(link => (
-            <Link key={link.href} href={link.href} className="flex items-center transition-colors hover:text-primary">
-              <link.icon className="mr-2 h-4 w-4" />
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        {currentUser && (
+          <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
+            {authenticatedNavLinks.map(link => (
+              <Link key={link.href} href={link.href} className="flex items-center transition-colors hover:text-primary">
+                <link.icon className="mr-2 h-4 w-4" />
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        )}
 
         <div className="flex items-center space-x-2">
           {loading ? (
@@ -94,21 +95,26 @@ const Navbar = () => {
                   <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout}>
+                <DropdownMenuItem onClick={() => { logout(); router.push('/'); }}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
+            // Buttons for non-logged-in users (Desktop)
             <>
               <Button variant="outline" asChild className="hidden sm:inline-flex">
                 <Link href="/login">
-                  <LogIn className="mr-2 h-4 w-4" /> Login
+                  {/* <LogIn className="mr-2 h-4 w-4" /> */}
+                  Get Started
                 </Link>
               </Button>
               <Button asChild className="hidden sm:inline-flex">
-                <Link href="/signup">Sign Up</Link>
+                <Link href="/signup">
+                  {/* <UserPlus className="mr-2 h-4 w-4" /> */}
+                  Sign Up
+                </Link>
               </Button>
             </>
           )}
@@ -130,32 +136,64 @@ const Navbar = () => {
                     </Link>
                   </SheetTitle>
                 </SheetHeader>
-                <nav className="flex flex-col space-y-3">
-                  {navLinks.map((link) => (
-                    <SheetClose key={link.href} asChild>
-                       <Link
-                        href={link.href}
-                        className="flex items-center rounded-md p-3 text-base hover:bg-accent hover:text-accent-foreground transition-colors"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <link.icon className="mr-3 h-5 w-5" />
-                        {link.label}
-                      </Link>
-                    </SheetClose>
-                  ))}
-                </nav>
+                
+                {currentUser && (
+                  <nav className="flex flex-col space-y-3">
+                    {authenticatedNavLinks.map((link) => (
+                      <SheetClose key={link.href} asChild>
+                         <Link
+                          href={link.href}
+                          className="flex items-center rounded-md p-3 text-base hover:bg-accent hover:text-accent-foreground transition-colors"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <link.icon className="mr-3 h-5 w-5" />
+                          {link.label}
+                        </Link>
+                      </SheetClose>
+                    ))}
+                  </nav>
+                )}
+
+                {/* Auth links for mobile menu */}
                 {!currentUser && !loading && (
-                  <div className="mt-8 space-y-3 border-t pt-6">
+                  <div className={`space-y-3 ${currentUser ? 'mt-8 border-t pt-6' : ''}`}>
                      <SheetClose asChild>
-                      <Button variant="outline" className="w-full" asChild>
+                      <Button variant="outline" className="w-full justify-start p-3 text-base" asChild>
                         <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                          <LogIn className="mr-2 h-4 w-4" /> Login
+                          <LogIn className="mr-3 h-5 w-5" /> Get Started
                         </Link>
                       </Button>
                     </SheetClose>
                     <SheetClose asChild>
-                      <Button className="w-full" asChild>
-                        <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>Sign Up</Link>
+                      <Button className="w-full justify-start p-3 text-base" asChild>
+                        <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                          <UserPlus className="mr-3 h-5 w-5" /> Sign Up
+                        </Link>
+                      </Button>
+                    </SheetClose>
+                  </div>
+                )}
+
+                {currentUser && !loading && (
+                  <div className="mt-8 space-y-3 border-t pt-6">
+                     <SheetClose asChild>
+                      <Link
+                        href="/profile"
+                        className="flex items-center rounded-md p-3 text-base hover:bg-accent hover:text-accent-foreground transition-colors"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <User className="mr-3 h-5 w-5" />
+                        Profile
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start p-3 text-base hover:bg-accent hover:text-accent-foreground" 
+                        onClick={() => { logout(); setIsMobileMenuOpen(false); router.push('/'); }}
+                      >
+                        <LogOut className="mr-3 h-5 w-5" />
+                        Log out
                       </Button>
                     </SheetClose>
                   </div>
