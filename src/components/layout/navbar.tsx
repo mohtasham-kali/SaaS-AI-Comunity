@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -23,10 +24,12 @@ import LogoIcon from '@/components/icons/logo-icon';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Home, PlusCircle, User, LogOut, LogIn, Settings, HelpCircle, Menu, UserPlus } from 'lucide-react';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation'; // Added import
 
 const Navbar = () => {
   const { currentUser, logout, loading } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const router = useRouter(); // Initialized router
 
   const getInitials = (name?: string | null) => {
     if (!name) return 'CA';
@@ -190,7 +193,7 @@ const Navbar = () => {
                       <Button 
                         variant="ghost" 
                         className="w-full justify-start p-3 text-base hover:bg-accent hover:text-accent-foreground" 
-                        onClick={() => { logout(); setIsMobileMenuOpen(false); router.push('/'); }}
+                        onClick={() => { logout(); router.push('/'); setIsMobileMenuOpen(false); }}
                       >
                         <LogOut className="mr-3 h-5 w-5" />
                         Log out
