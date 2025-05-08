@@ -129,7 +129,11 @@ export function PostItem({ post: initialPost }: PostItemProps) {
 
     } catch (error) {
       console.error("AI Suggestion Error:", error);
-      toast({ title: "AI Error", description: "Failed to get AI suggestion. Please try again later.", variant: "destructive" });
+      toast({ 
+        title: "AI Error", 
+        description: "Failed to get AI suggestion. Please ensure your internet connection is stable and the AI service is reachable. If the issue persists, the AI service might be temporarily unavailable or there could be a local server configuration problem (e.g., Genkit server not running). Please try again later.", 
+        variant: "destructive" 
+      });
     } finally {
       setIsAiLoading(false);
     }
@@ -336,3 +340,4 @@ export function PostItem({ post: initialPost }: PostItemProps) {
     </div>
   );
 }
+
