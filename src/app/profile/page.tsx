@@ -14,6 +14,9 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
+// This page needs to be within the (main_app) group to get the sidebar layout.
+// For now, it functions as a standalone page with its own auth check.
+// To integrate with the sidebar, move this file to src/app/(main_app)/profile/page.tsx
 
 export default function ProfilePage() {
   const { currentUser, loading, logout } = useAuth();
@@ -26,6 +29,14 @@ export default function ProfilePage() {
     }
   }, [currentUser, loading, router]);
 
+  useEffect(() => {
+    if (currentUser?.name) {
+      document.title = `${currentUser.name} - CodeAssist Profile`;
+    } else if (!loading) {
+      document.title = 'User Profile - CodeAssist';
+    }
+  }, [currentUser, loading]);
+
   const getInitials = (name?: string | null) => {
     if (!name) return '??';
     const names = name.split(' ');
@@ -34,57 +45,57 @@ export default function ProfilePage() {
 
   if (loading || !currentUser) {
     return (
-      <div className="container mx-auto py-12">
-        <Card className="max-w-2xl mx-auto shadow-xl">
-          <CardHeader className="items-center text-center p-8 bg-muted/30">
-            <Skeleton className="h-24 w-24 rounded-full mb-4 border-4 border-primary" />
-            <Skeleton className="h-8 w-56 mb-2" />
-            <Skeleton className="h-6 w-72" />
-          </CardHeader>
-          <CardContent className="p-8 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[...Array(2)].map((_, i) => (
-                    <div key={i} className="flex items-center space-x-3 p-4 border rounded-lg bg-background">
-                        <Skeleton className="h-8 w-8 rounded-md" />
-                        <div className="w-full">
-                            <Skeleton className="h-4 w-1/3 mb-1.5" />
-                            <Skeleton className="h-5 w-2/3" />
+      <div className="container mx-auto py-12 flex justify-center">
+        <div className="w-full max-w-2xl">
+            <Card className="shadow-xl">
+            <CardHeader className="items-center text-center p-8 bg-muted/30">
+                <Skeleton className="h-24 w-24 rounded-full mb-4 border-4 border-primary" />
+                <Skeleton className="h-8 w-56 mb-2" />
+                <Skeleton className="h-6 w-72" />
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {[...Array(2)].map((_, i) => (
+                        <div key={i} className="flex items-center space-x-3 p-4 border rounded-lg bg-background">
+                            <Skeleton className="h-8 w-8 rounded-md" />
+                            <div className="w-full">
+                                <Skeleton className="h-4 w-1/3 mb-1.5" />
+                                <Skeleton className="h-5 w-2/3" />
+                            </div>
                         </div>
-                    </div>
-                ))}
-            </div>
-             <Card className="bg-background">
-                <CardHeader>
-                    <Skeleton className="h-6 w-40" />
-                </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <Skeleton className="h-4 w-1/2 mb-1.5" />
-                        <Skeleton className="h-6 w-3/4" />
-                    </div>
-                    <div>
-                        <Skeleton className="h-4 w-1/2 mb-1.5" />
-                        <Skeleton className="h-6 w-3/4" />
-                    </div>
-                </CardContent>
+                    ))}
+                </div>
+                <Card className="bg-background">
+                    <CardHeader>
+                        <Skeleton className="h-6 w-40" />
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <Skeleton className="h-4 w-1/2 mb-1.5" />
+                            <Skeleton className="h-6 w-3/4" />
+                        </div>
+                        <div>
+                            <Skeleton className="h-4 w-1/2 mb-1.5" />
+                            <Skeleton className="h-6 w-3/4" />
+                        </div>
+                    </CardContent>
+                </Card>
+                <Skeleton className="h-12 w-full mt-6" />
+                <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                    <Skeleton className="h-10 w-full sm:w-32" />
+                    <Skeleton className="h-10 w-full sm:w-32" />
+                </div>
+            </CardContent>
             </Card>
-            <Skeleton className="h-12 w-full mt-6" />
-            <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                <Skeleton className="h-10 w-full sm:w-32" />
-                <Skeleton className="h-10 w-full sm:w-32" />
-            </div>
-          </CardContent>
-        </Card>
+        </div>
       </div>
     );
   }
   
-  if (typeof window !== "undefined") {
-    document.title = `${currentUser.name || 'User Profile'} - CodeAssist`;
-  }
 
   return (
-    <div className="container mx-auto py-12">
+    // This container might be redundant if the page is moved into (main_app) layout.
+    <div className="container mx-auto py-6 md:py-8 lg:py-10"> {/* Reduced top padding */}
       <Card className="max-w-2xl mx-auto shadow-2xl overflow-hidden">
         <CardHeader className="items-center text-center p-8 bg-gradient-to-br from-muted/50 to-muted/20">
           <Avatar className="h-28 w-28 mb-4 border-4 border-primary shadow-lg">
@@ -134,7 +145,7 @@ export default function ProfilePage() {
 
           {currentUser.plan === 'free' && (
             <Button size="lg" className="w-full bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 text-primary-foreground shadow-lg text-base py-6" asChild>
-              <Link href="/pricing"> {/* Placeholder for pricing page */}
+              <Link href="/premium-features"> 
                 <Zap className="mr-2 h-5 w-5" /> Upgrade to Premium
               </Link>
             </Button>
@@ -149,3 +160,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

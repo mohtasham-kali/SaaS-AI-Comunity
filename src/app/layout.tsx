@@ -3,8 +3,6 @@ import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import Navbar from '@/components/layout/navbar';
-import Footer from '@/components/layout/footer';
 import { AuthProvider } from '@/components/auth/auth-provider';
 
 export const metadata: Metadata = {
@@ -19,13 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased font-sans flex flex-col min-h-screen`}>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased font-sans flex flex-col min-h-screen bg-background`}>
         <AuthProvider>
-          <Navbar />
-          <main className="flex-grow container mx-auto px-4 py-8">
-            {children}
-          </main>
-          <Footer />
+          {children}
           <Toaster />
         </AuthProvider>
       </body>
