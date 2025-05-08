@@ -19,16 +19,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased font-sans flex flex-col min-h-screen bg-background`}>
+    <html lang="en" className="dark" suppressHydrationWarning><body className={`${GeistSans.variable} ${GeistMono.variable} antialiased font-sans flex flex-col min-h-screen bg-background`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <AuthProvider>
             {children}
             <Toaster />
           </AuthProvider>
         </ThemeProvider>
-      </body>
-    </html>
+      </body></html>
   );
 }
-
