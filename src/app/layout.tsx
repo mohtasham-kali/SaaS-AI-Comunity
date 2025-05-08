@@ -19,8 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
-      <head /> {/* Explicit empty head element to ensure proper structure */}
+    <html lang="en" className="dark" suppressHydrationWarning><head />
       <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased font-sans flex flex-col min-h-screen bg-background`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <AuthProvider>
@@ -32,4 +31,3 @@ export default function RootLayout({
     </html>
   );
 }
-
