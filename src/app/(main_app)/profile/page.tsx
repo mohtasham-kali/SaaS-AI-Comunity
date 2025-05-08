@@ -14,20 +14,17 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
-// This page needs to be within the (main_app) group to get the sidebar layout.
-// For now, it functions as a standalone page with its own auth check.
-// To integrate with the sidebar, move this file to src/app/(main_app)/profile/page.tsx
-
 export default function ProfilePage() {
   const { currentUser, loading, logout } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (!loading && !currentUser) {
-      router.push('/login?redirect=/profile');
-    }
-  }, [currentUser, loading, router]);
+  // MainAppLayout handles auth check, so local redirect is no longer needed here.
+  // useEffect(() => {
+  //   if (!loading && !currentUser) {
+  //     router.push('/login?redirect=/profile');
+  //   }
+  // }, [currentUser, loading, router]);
 
   useEffect(() => {
     if (currentUser?.name) {
@@ -43,10 +40,11 @@ export default function ProfilePage() {
     return names.length > 1 ? names[0][0].toUpperCase() + names[names.length - 1][0].toUpperCase() : name.substring(0, 2).toUpperCase();
   };
 
-  if (loading || !currentUser) {
+  // Loading state is handled by MainAppLayout, but we can keep a skeleton for content loading if needed.
+  // However, since MainAppLayout waits for currentUser, this specific skeleton might not be shown often.
+  if (loading || !currentUser) { // This check ensures currentUser is available, though MainAppLayout should guarantee it.
     return (
-      <div className="container mx-auto py-12 flex justify-center">
-        <div className="w-full max-w-2xl">
+        <div className="w-full max-w-2xl mx-auto"> {/* Added mx-auto to center skeleton within layout's padding */}
             <Card className="shadow-xl">
             <CardHeader className="items-center text-center p-8 bg-muted/30">
                 <Skeleton className="h-24 w-24 rounded-full mb-4 border-4 border-primary" />
@@ -88,14 +86,12 @@ export default function ProfilePage() {
             </CardContent>
             </Card>
         </div>
-      </div>
     );
   }
   
-
+  // Removed outer container div as MainAppLayout provides padding.
+  // The Card component is now the top-level element for the page content.
   return (
-    // This container might be redundant if the page is moved into (main_app) layout.
-    <div className="container mx-auto py-6 md:py-8 lg:py-10"> {/* Reduced top padding */}
       <Card className="max-w-2xl mx-auto shadow-2xl overflow-hidden">
         <CardHeader className="items-center text-center p-8 bg-gradient-to-br from-muted/50 to-muted/20">
           <Avatar className="h-28 w-28 mb-4 border-4 border-primary shadow-lg">
@@ -152,12 +148,11 @@ export default function ProfilePage() {
           )}
           
           <div className="flex flex-col sm:flex-row gap-4 mt-8 pt-6 border-t">
-            <Button variant="outline" className="w-full sm:w-auto text-base py-3" onClick={() => { toast({title: "Feature Coming Soon!", description: "Editing profiles will be available shortly."}) }}><Edit3 className="mr-2 h-4 w-4"/>Edit Profile</Button>
+            <Button variant="outline" className="w-full sm:w-auto text-base py-3" onClick={() => { toast({title: "Feature Coming Soon!", description: "Editing profiles, changing passwords, and managing notifications will be available shortly."}) }}><Edit3 className="mr-2 h-4 w-4"/>Edit Profile</Button>
             <Button variant="destructive" className="w-full sm:w-auto text-base py-3" onClick={() => { logout(); router.push('/'); }}><LogOutIcon className="mr-2 h-4 w-4"/>Log Out</Button>
           </div>
         </CardContent>
       </Card>
-    </div>
   );
 }
 

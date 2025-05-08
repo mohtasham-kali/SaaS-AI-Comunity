@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -5,7 +6,7 @@ import LogoIcon from '@/components/icons/logo-icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Sun, Moon } from 'lucide-react';
-import { useTheme } from 'next-themes'; // Assuming next-themes is or will be installed
+import { useTheme } from 'next-themes'; 
 import { useAuth } from '@/components/auth/auth-provider';
 import { Skeleton } from '../ui/skeleton';
 
@@ -31,17 +32,20 @@ export function MainAppHeader() {
           <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           <span className="sr-only">Toggle theme</span>
         </Button>
-        {loading ? (
-            <Skeleton className="h-8 w-8 rounded-full" />
-        ) : currentUser ? (
-            <Avatar className="h-8 w-8">
-                <AvatarImage src={currentUser.image || undefined} alt={currentUser.name || 'User avatar'} data-ai-hint="user avatar" />
-                <AvatarFallback>{getInitials(currentUser.name)}</AvatarFallback>
-            </Avatar>
-        ) : (
-            <Skeleton className="h-8 w-8 rounded-full" /> // Placeholder if not logged in, though layout implies logged in state
-        )}
+        <Link href="/profile" aria-label="View profile and settings" className="flex items-center justify-center">
+          {loading ? (
+              <Skeleton className="h-8 w-8 rounded-full" />
+          ) : currentUser ? (
+              <Avatar className="h-8 w-8 cursor-pointer">
+                  <AvatarImage src={currentUser.image || undefined} alt={currentUser.name || 'User avatar'} data-ai-hint="user avatar" />
+                  <AvatarFallback>{getInitials(currentUser.name)}</AvatarFallback>
+              </Avatar>
+          ) : (
+              <Skeleton className="h-8 w-8 rounded-full" /> 
+          )}
+        </Link>
       </div>
     </header>
   );
 }
+
