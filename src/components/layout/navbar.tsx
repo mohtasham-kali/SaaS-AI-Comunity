@@ -22,14 +22,14 @@ import {
 } from '@/components/ui/sheet';
 import LogoIcon from '@/components/icons/logo-icon';
 import { useAuth } from '@/components/auth/auth-provider';
-import { Home, PlusCircle, User, LogOut, LogIn, Settings, HelpCircle, Menu, UserPlus } from 'lucide-react';
+import { Home, PlusCircle, User, LogOut, LogIn, Settings, Menu, UserPlus } from 'lucide-react';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // Added import
+import { useRouter } from 'next/navigation'; 
 
 const Navbar = () => {
   const { currentUser, logout, loading } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const router = useRouter(); // Initialized router
+  const router = useRouter(); 
 
   const getInitials = (name?: string | null) => {
     if (!name) return 'CA';
@@ -43,7 +43,7 @@ const Navbar = () => {
   const authenticatedNavLinks = [
     { href: "/", label: "Home", icon: Home },
     { href: "/new-post", label: "New Post", icon: PlusCircle },
-    { href: "/#faq", label: "FAQ", icon: HelpCircle },
+    // { href: "/#faq", label: "FAQ", icon: HelpCircle }, // FAQ link removed
   ];
 
   return (
@@ -109,13 +109,11 @@ const Navbar = () => {
             <>
               <Button variant="outline" asChild className="hidden sm:inline-flex">
                 <Link href="/login">
-                  {/* <LogIn className="mr-2 h-4 w-4" /> */}
                   Get Started
                 </Link>
               </Button>
               <Button asChild className="hidden sm:inline-flex">
                 <Link href="/signup">
-                  {/* <UserPlus className="mr-2 h-4 w-4" /> */}
                   Sign Up
                 </Link>
               </Button>

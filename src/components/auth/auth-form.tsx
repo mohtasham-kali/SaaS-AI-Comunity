@@ -14,7 +14,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { OAuthButtons } from "./oauth-buttons";
 import { useAuth } from "./auth-provider";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -140,18 +139,8 @@ export function AuthForm({ mode }: AuthFormProps) {
           </Button>
         </form>
       </Form>
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
-      </div>
-      <OAuthButtons />
-      <p className="px-8 text-center text-sm text-muted-foreground">
+      
+      <p className="px-8 text-center text-sm text-muted-foreground mt-6">
         {mode === 'login' ? (
           <>
             Don&apos;t have an account?{' '}
