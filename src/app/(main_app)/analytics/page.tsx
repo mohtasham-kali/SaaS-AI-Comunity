@@ -64,37 +64,27 @@ export default function AnalyticsPage() {
     );
   }
 
-  if (!currentUser || !currentUser.recentActivities || currentUser.recentActivities.length === 0) {
-    return (
-      <div className="container mx-auto py-8">
-        <Card className="max-w-3xl mx-auto shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center text-2xl">
-              <BarChartIcon className="mr-3 h-6 w-6 text-primary" />
-              Usage Analytics
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="mt-6 p-8 bg-muted/50 rounded-lg text-center space-y-4">
-              <ActivityIcon className="mx-auto h-12 w-12 text-primary/70" />
-              <h3 className="text-xl font-semibold">No Activity Data</h3>
-              <p className="mt-2 text-muted-foreground">
-                Start using CodeAssist, and your usage analytics will appear here.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  let bugFixerCount = 0;
+  let codeGeneratorCount = 0;
+  let errorExplainerCount = 0;
+  let forumPostCount = 0;
+  let forumCommentCount = 0;
+
+  if (currentUser && currentUser.recentActivities && currentUser.recentActivities.length > 0) {
+    const activities = currentUser.recentActivities;
+    bugFixerCount = activities.filter(act => act.type === 'ai_tool_bug_fixer').length;
+    codeGeneratorCount = activities.filter(act => act.type === 'ai_tool_code_generator').length;
+    errorExplainerCount = activities.filter(act => act.type === 'ai_tool_error_explainer').length;
+    forumPostCount = activities.filter(act => act.type === 'forum_post').length;
+    forumCommentCount = activities.filter(act => act.type === 'forum_comment').length;
+  } else {
+    // Sample data for users with no activity
+    bugFixerCount = 7;
+    codeGeneratorCount = 12;
+    errorExplainerCount = 4;
+    forumPostCount = 9;
+    forumCommentCount = 15;
   }
-
-  const activities = currentUser.recentActivities;
-
-  const bugFixerCount = activities.filter(act => act.type === 'ai_tool_bug_fixer').length;
-  const codeGeneratorCount = activities.filter(act => act.type === 'ai_tool_code_generator').length;
-  const errorExplainerCount = activities.filter(act => act.type === 'ai_tool_error_explainer').length;
-  const forumPostCount = activities.filter(act => act.type === 'forum_post').length;
-  const forumCommentCount = activities.filter(act => act.type === 'forum_comment').length;
 
   const aiToolUsageData: AiToolUsageData[] = [
     { name: 'Bug Fixer', count: bugFixerCount },
@@ -116,10 +106,12 @@ export default function AnalyticsPage() {
         <CardHeader>
           <CardTitle className="flex items-center text-3xl font-bold">
             <BarChartIcon className="mr-3 h-8 w-8 text-primary" />
-            Your Usage Analytics
+            {(currentUser && currentUser.recentActivities && currentUser.recentActivities.length > 0) ? 'Your Usage Analytics' : 'Sample Usage Analytics'}
           </CardTitle>
           <CardDescription className="text-lg">
-            An overview of your activity on CodeAssist.
+             {(currentUser && currentUser.recentActivities && currentUser.recentActivities.length > 0) 
+                ? 'An overview of your activity on CodeAssist.'
+                : 'This is a sample overview. Start using CodeAssist to see your personalized analytics!'}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -226,4 +218,3 @@ export default function AnalyticsPage() {
     </div>
   );
 }
-
