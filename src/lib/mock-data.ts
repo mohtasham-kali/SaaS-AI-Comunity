@@ -33,8 +33,8 @@ const mockUsers: UserProfile[] = [
 ];
 
 const mockFiles: UploadedFile[] = [
-    { id: 'file1', name: 'screenshot.png', url: 'https://picsum.photos/seed/file1/600/400', type: 'image/png', size: 1024 * 500 },
-    { id: 'file2', name: 'error_log.txt', url: '#', type: 'text/plain', size: 1024 * 10 },
+    { id: 'file1', name: 'screenshot.png', url: 'https://placehold.co/600x400.png', type: 'image/png', size: 1024 * 500, data_ai_hint: 'screenshot error' },
+    { id: 'file2', name: 'error_log.txt', url: '#', type: 'text/plain', size: 1024 * 10, data_ai_hint: 'text document' },
 ];
 
 const mockComments: Comment[] = [
@@ -132,7 +132,11 @@ export function getMockUsers(): UserProfile[] {
 }
 
 export function getMockUserById(id: string): UserProfile | undefined {
-  return JSON.parse(JSON.stringify(mockUsers.find(user => user.id === id)));
+  const user = mockUsers.find(user => user.id === id);
+  if (user) {
+    return JSON.parse(JSON.stringify(user));
+  }
+  return undefined;
 }
 
 export function getMockPosts(): Post[] {
