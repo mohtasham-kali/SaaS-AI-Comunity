@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,7 +47,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: mode === 'login' ? { email: "", password: "" } : { name: "", email: "", password: "" },
+    defaultValues: mode === 'login' ? { email: "mohtasham.siddiqui17@gmail.com", password: "#Mohtisham123" } : { name: "", email: "", password: "" },
   });
 
   async function onSubmit(values: FormValues) {
