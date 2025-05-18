@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -8,14 +9,18 @@ import type { UploadedFile } from "@/types";
 
 interface FileUploadButtonProps {
   onFilesSelected: (files: UploadedFile[]) => void;
+  onRawFilesSelected?: (files: File[]) => void; // Optional: For direct File object access
   maxFiles?: number;
   maxSizeMB?: number; // Max size per file in MB
   currentPlan?: "free" | "premium";
+  accept?: string; // Added accept prop
 }
 
 export function FileUploadButton({ 
   onFilesSelected, 
-  currentPlan = "free" 
+  onRawFilesSelected,
+  currentPlan = "free",
+  accept = "image/*,application/pdf,.doc,.docx,.txt,.js,.ts,.py,.java,.c,.cpp,.cs,.html,.css,.json,.xml" // Default accept
 }: FileUploadButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -29,20 +34,26 @@ export function FileUploadButton({
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const filesArray = Array.from(event.target.files);
-      const selectedFiles: UploadedFile[] = filesArray
-        .slice(0, limits.maxFiles) // Respect max files limit
+      
+      const validRawFiles: File[] = filesArray
         .filter(file => file.size <= limits.maxSizeMB * 1024 * 1024) // Respect max size limit
+        .slice(0, limits.maxFiles); // Respect max files limit after filtering by size
+
+      const selectedUploadedFiles: UploadedFile[] = validRawFiles
         .map((file, index) => ({
           id: `temp-file-${Date.now()}-${index}`,
           name: file.name,
-          url: URL.createObjectURL(file), // Temporary URL for preview if needed
+          url: URL.createObjectURL(file), // Temporary URL for preview
           type: file.type,
           size: file.size,
         }));
       
-      // TODO: Add toast notifications for exceeding limits
+      // TODO: Add toast notifications for exceeding limits (if any files were filtered out)
 
-      onFilesSelected(selectedFiles);
+      onFilesSelected(selectedUploadedFiles);
+      if (onRawFilesSelected) {
+        onRawFilesSelected(validRawFiles);
+      }
       
       // Reset file input to allow selecting the same file again
       if (fileInputRef.current) {
@@ -59,7 +70,7 @@ export function FileUploadButton({
         onChange={handleFileChange}
         className="hidden"
         multiple
-        accept="image/*,application/pdf,.doc,.docx,.txt,.js,.ts,.py,.java,.c,.cpp,.cs,.html,.css,.json,.xml" 
+        accept={accept} 
       />
       <Button
         type="button"
@@ -70,8 +81,9 @@ export function FileUploadButton({
         Upload Files
       </Button>
       <p className="text-xs text-muted-foreground mt-1">
-        Max {limits.maxFiles} files, up to {limits.maxSizeMB}MB each.
+        Max {limits.maxFiles} files, up to {limits.maxSizeMB}MB each. Accepted types: {accept === "image/*,application/pdf,.doc,.docx,.txt,.js,.ts,.py,.java,.c,.cpp,.cs,.html,.css,.json,.xml" ? "various" : accept}.
       </p>
     </>
   );
 }
+
