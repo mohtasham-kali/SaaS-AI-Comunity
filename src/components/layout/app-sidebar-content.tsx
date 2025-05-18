@@ -27,7 +27,7 @@ import {
   LogOut,
   Briefcase, 
   AreaChart,
-  Group, // Added for Collaboration
+  Group, 
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -50,7 +50,7 @@ const mainNavGroups: NavGroup[] = [
       { href: '/forum', label: 'Forum', icon: Home, matchStartsWith: true },
       { href: '/dashboard', label: 'Dashboard', icon: Briefcase },
       { href: '/analytics', label: 'Analytics', icon: AreaChart },
-      { href: '/collaboration', label: 'Collaboration', icon: Group }, // Added Collaboration
+      { href: '/collaboration', label: 'Team & Collaboration', icon: Group }, 
     ],
   },
   {
@@ -90,7 +90,7 @@ const AppSidebarContent = () => {
           <Skeleton className="h-8 w-32" />
         </SidebarHeader>
         <SidebarContent className="p-4 space-y-2">
-          {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-8 w-full mb-1" />)} 
+          {[...Array(9)].map((_, i) => <Skeleton key={i} className="h-8 w-full mb-1" />)} 
         </SidebarContent>
         <SidebarFooter className="p-4">
           <Skeleton className="h-10 w-full" />
