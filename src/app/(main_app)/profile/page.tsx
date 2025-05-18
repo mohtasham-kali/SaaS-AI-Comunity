@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Mail, CalendarDays, Activity, ShieldCheck, Zap, Edit3, LogOutIcon, Gem } from 'lucide-react';
+import { Mail, CalendarDays, Activity, ShieldCheck, Zap, Edit3, LogOutIcon, Gem, Star } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -161,3 +161,5 @@ export default function ProfilePage() {
       </Card>
   );
 }
+
+    
