@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   name?: string | null;
@@ -24,6 +25,7 @@ export interface UploadedFile {
   url: string; // URL to the stored file (e.g., Firebase Storage URL)
   type: string; // MIME type (e.g., 'image/png', 'application/pdf', 'text/javascript')
   size: number; // File size in bytes
+  data_ai_hint?: string; // Optional hint for AI image generation
 }
 
 export interface Post {
@@ -45,11 +47,20 @@ export interface Post {
 
 export type Plan = "free" | "premium";
 
+export interface ActivityItem {
+  id: string;
+  type: 'forum_post' | 'forum_comment' | 'ai_tool_bug_fixer' | 'ai_tool_code_generator' | 'ai_tool_error_explainer' | 'login';
+  description: string; // e.g., "Posted 'How to center a div?'", "Used Bug Fixer for 'TypeError in Python script'"
+  timestamp: string; // ISO date string
+  link?: string; // Optional link to the post or tool
+}
+
 export interface UserProfile extends User {
   plan: Plan;
   aiResponsesToday: number;
   aiResponsesThisWeek: number;
   lastLogin: string; // ISO date string
+  recentActivities?: ActivityItem[];
 }
 
 // For mock data purposes

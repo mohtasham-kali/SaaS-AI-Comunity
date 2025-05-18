@@ -1,4 +1,5 @@
-import type { UserProfile, Post, Comment, UploadedFile } from '@/types';
+
+import type { UserProfile, Post, Comment, UploadedFile, ActivityItem } from '@/types';
 
 const mockUsers: UserProfile[] = [
   {
@@ -10,6 +11,12 @@ const mockUsers: UserProfile[] = [
     aiResponsesToday: 2,
     aiResponsesThisWeek: 5,
     lastLogin: new Date().toISOString(),
+    recentActivities: [
+      { id: 'act1', type: 'forum_post', description: "Posted 'NullPointerException in Java Spring Boot App'", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), link: '/posts/post1' },
+      { id: 'act2', type: 'ai_tool_bug_fixer', description: "Used Bug Fixer for 'Java Spring Boot NPE'", timestamp: new Date(Date.now() - 1000 * 60 * 90).toISOString(), link: '/dashboard/tools/bug-fixer' },
+      { id: 'act3', type: 'login', description: "Logged in to the platform", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString() },
+      { id: 'act9', type: 'forum_comment', description: "Replied to 'CSS Flexbox centering'", timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), link: '/posts/post2' },
+    ],
   },
   {
     id: 'user2',
@@ -20,6 +27,11 @@ const mockUsers: UserProfile[] = [
     aiResponsesToday: 1,
     aiResponsesThisWeek: 3,
     lastLogin: new Date().toISOString(),
+    recentActivities: [
+      { id: 'act4', type: 'forum_comment', description: "Commented on 'NullPointerException in Java'", timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(), link: '/posts/post1' },
+      { id: 'act5', type: 'ai_tool_error_explainer', description: "Used Error Explainer for 'CSS Flexbox issue'", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString(), link: '/dashboard/tools/error-explainer'},
+      { id: 'act6', type: 'login', description: "Logged in successfully", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString() },
+    ],
   },
   {
     id: 'user3',
@@ -30,6 +42,7 @@ const mockUsers: UserProfile[] = [
     aiResponsesToday: 0,
     aiResponsesThisWeek: 0,
     lastLogin: new Date().toISOString(),
+    recentActivities: [], // AI has no user-initiated activities
   },
   {
     id: 'user4',
@@ -40,6 +53,11 @@ const mockUsers: UserProfile[] = [
     aiResponsesToday: 0,
     aiResponsesThisWeek: 0,
     lastLogin: new Date().toISOString(),
+    recentActivities: [
+      { id: 'act7', type: 'login', description: "Logged in", timestamp: new Date(Date.now() - 1000 * 60 * 10).toISOString() },
+      { id: 'act8', type: 'ai_tool_code_generator', description: "Used Code Generator for 'React login form'", timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), link: '/dashboard/tools/code-generator'},
+      { id: 'act10', type: 'forum_post', description: "Asked 'How to setup Tailwind CSS with Next.js 14?'", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), link: '#' }, // Placeholder link
+    ],
   },
 ];
 
@@ -68,6 +86,15 @@ const mockComments: Comment[] = [
     language: 'javascript',
     createdAt: new Date(Date.now() - 1000 * 60 * 2).toISOString(), // 2 minutes ago
     isAI: true,
+  },
+   {
+    id: 'comment3',
+    postId: 'post2',
+    userId: 'user1', 
+    user: mockUsers.find(u => u.id === 'user1')!,
+    content: "To center with Flexbox, you typically need `justify-content: center;` and `align-items: center;` on the parent. Make sure the parent has a defined height if you're centering vertically within it.",
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), 
+    isAI: false,
   },
 ];
 
@@ -104,7 +131,7 @@ public class MyService {
     user: mockUsers.find(u => u.id === 'user1')!,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
     updatedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-    comments: mockComments.filter(c => c.postId === 'post1'),
+    comments: [], // Will be populated below
     files: [mockFiles[0]],
     upvotes: 15,
     isResolved: false,
@@ -131,7 +158,7 @@ public class MyService {
     user: mockUsers.find(u => u.id === 'user2')!,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
-    comments: mockComments.filter(c => c.postId === 'post2'), // Ensure comments are correctly filtered
+    comments: [], // Will be populated below
     files: [],
     upvotes: 25,
     isResolved: true,
@@ -163,7 +190,6 @@ export function getMockUserById(id: string): UserProfile | undefined {
 }
 
 export function getMockPosts(): Post[] {
-  // Add user objects to posts for easier access
   return JSON.parse(JSON.stringify(mockPosts.map(post => ({
     ...post,
     user: mockUsers.find(u => u.id === post.userId)!,
@@ -203,7 +229,7 @@ export function addMockPost(post: Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 
         upvotes: 0,
         isResolved: false,
     };
-    mockPosts.push(newPost); // Add to the main array
+    mockPosts.unshift(newPost); // Add to the beginning of the array
     return JSON.parse(JSON.stringify(newPost));
 }
 
