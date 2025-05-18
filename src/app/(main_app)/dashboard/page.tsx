@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Activity, Wrench, TerminalSquare, SearchX, ArrowRight, FilePenLine, MessageSquareText, Wand2, LogIn, ChevronRight, ExternalLink } from "lucide-react";
+import { Briefcase, Activity, Wrench, Wand2, SearchX, ArrowRight, FilePenLine, MessageSquareText, LogIn, ChevronRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/auth-provider";
 import type { ActivityItem } from "@/types";
@@ -20,7 +20,7 @@ const aiTools = [
   {
     title: "Prompt/Snippet to Code",
     description: "Convert your ideas or existing code snippets into functional code with AI assistance.",
-    icon: <Wand2 className="h-8 w-8 mb-3 text-primary" />, // Changed to Wand2 to match code-generator
+    icon: <Wand2 className="h-8 w-8 mb-3 text-primary" />,
     link: "/dashboard/tools/code-generator",
     cta: "Generate Code",
   },
@@ -106,10 +106,10 @@ export default function DashboardPage() {
             </div>
           )}
         </CardContent>
-         {recentActivities.length > 0 && (
+         {currentUser && currentUser.recentActivities && currentUser.recentActivities.length > 0 && (
             <CardFooter className="border-t pt-4">
                 <Button variant="link" asChild className="text-primary hover:text-primary/80 p-0 h-auto">
-                    <Link href="/profile/activity"> {/* Placeholder link for full activity page */}
+                    <Link href="/profile/activity">
                         View All Activity <ChevronRight className="ml-1 h-4 w-4" />
                     </Link>
                 </Button>
