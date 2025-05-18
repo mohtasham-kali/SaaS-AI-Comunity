@@ -6,7 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Users, ListChecks, MessageSquare, PlusCircle, Edit2, Mail, CalendarDays } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Users, ListChecks, MessageSquare, PlusCircle, Edit2, Mail, CalendarDays, Send } from "lucide-react";
 import { format } from 'date-fns';
 
 interface TeamMember {
@@ -15,6 +17,7 @@ interface TeamMember {
   email: string;
   avatarUrl: string;
   avatarFallback: string;
+  data_ai_hint?: string;
 }
 
 interface Task {
@@ -24,6 +27,17 @@ interface Task {
   status: 'To Do' | 'In Progress' | 'Done';
   dueDate: string; 
   description?: string;
+}
+
+interface ChatMessage {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatarUrl?: string;
+  userAvatarFallback: string;
+  message: string;
+  timestamp: string;
+  isCurrentUser?: boolean;
 }
 
 const mockTeamMembers: TeamMember[] = [
@@ -39,11 +53,19 @@ const mockTasks: Task[] = [
   { id: 'task4', title: 'Write Unit Tests for Payment Module', assignedToId: 'tm3', status: 'To Do', dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), description: 'Ensure 90% code coverage for critical payment functions.' },
 ];
 
+const mockChatMessages: ChatMessage[] = [
+    { id: 'msg1', userId: 'tm1', userName: 'Alice Coder', userAvatarFallback: 'AC', message: 'Hey team, how is the user auth flow coming along?', timestamp: new Date(Date.now() - 60 * 60 * 1000 * 2).toISOString() },
+    { id: 'msg2', userId: 'tm2', userName: 'Bob Debugger', userAvatarFallback: 'BD', message: 'Good progress! Just working on the password reset part.', timestamp: new Date(Date.now() - 60 * 60 * 1000 * 1.5).toISOString() },
+    { id: 'msg3', userId: 'user-current', userName: 'You', userAvatarFallback: 'ME', message: 'Great! Let me know if you need help with the UI for that.', timestamp: new Date(Date.now() - 60 * 60 * 1000 * 1).toISOString(), isCurrentUser: true },
+    { id: 'msg4', userId: 'tm3', userName: 'Charlie Dev', userAvatarFallback: 'CD', message: 'I can help with testing once it\'s ready.', timestamp: new Date(Date.now() - 60 * 60 * 1000 * 0.5).toISOString()},
+];
+
+
 const getTaskStatusBadgeVariant = (status: Task['status']): "default" | "secondary" | "outline" | "destructive" => {
   switch (status) {
     case 'To Do': return "outline";
-    case 'In Progress': return "default"; // Primary color
-    case 'Done': return "secondary"; // Muted green or similar, using secondary for now
+    case 'In Progress': return "default"; 
+    case 'Done': return "secondary"; 
     default: return "outline";
   }
 };
@@ -176,21 +198,58 @@ export default function CollaborationPage() {
         </CardContent>
       </Card>
 
-      {/* Chat Section Placeholder */}
+      {/* Team Chat Section */}
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center text-2xl">
             <MessageSquare className="mr-3 h-6 w-6 text-primary" />
-            Team Chat
+            Team Chat (Conceptual)
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="p-8 bg-muted/50 rounded-lg text-center">
-            <h3 className="text-xl font-semibold">Real-time Communication Tools</h3>
-            <p className="mt-2 text-muted-foreground">
-              A dedicated space for team chat and AI-assisted discussions will be available here soon.
-            </p>
+        <CardContent className="flex flex-col h-[500px]">
+          <ScrollArea className="flex-grow h-full p-4 border rounded-md bg-muted/20 mb-4">
+            <div className="space-y-4">
+              {mockChatMessages.map((msg) => (
+                <div key={msg.id} className={`flex items-end gap-2 ${msg.isCurrentUser ? 'justify-end' : ''}`}>
+                  {!msg.isCurrentUser && (
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={msg.userAvatarUrl} data-ai-hint="chat avatar" />
+                      <AvatarFallback>{msg.userAvatarFallback}</AvatarFallback>
+                    </Avatar>
+                  )}
+                  <div className={`max-w-[70%] p-3 rounded-lg ${msg.isCurrentUser ? 'bg-primary text-primary-foreground' : 'bg-background'}`}>
+                    <p className="text-sm">{msg.message}</p>
+                    <p className={`text-xs mt-1 ${msg.isCurrentUser ? 'text-primary-foreground/70 text-right' : 'text-muted-foreground text-left'}`}>
+                      {msg.userName}, {format(new Date(msg.timestamp), "p")}
+                    </p>
+                  </div>
+                  {msg.isCurrentUser && (
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={msg.userAvatarUrl} data-ai-hint="my avatar"/>
+                      <AvatarFallback>{msg.userAvatarFallback}</AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
+              ))}
+              {mockChatMessages.length === 0 && (
+                <p className="text-muted-foreground text-center py-10">No messages yet. Start the conversation!</p>
+              )}
+            </div>
+          </ScrollArea>
+          <div className="flex items-center gap-2">
+            <Input 
+              type="text" 
+              placeholder="Type your message..." 
+              className="flex-grow text-base p-3"
+              disabled // Conceptual
+            />
+            <Button size="lg" disabled className="cursor-not-allowed">
+              <Send className="h-5 w-5 mr-2" /> Send
+            </Button>
           </div>
+           <p className="text-xs text-muted-foreground mt-2">
+            Real-time chat functionality requires backend integration. This is a visual mock-up.
+          </p>
         </CardContent>
       </Card>
 
