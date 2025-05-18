@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, CheckCircle2, XCircle, Edit2, Gem, Sparkles, Star } from "lucide-react";
+import { CreditCard, CheckCircle2, XCircle, Edit2, Gem, Sparkles, Star, Group } from "lucide-react";
 import type { Plan } from '@/types';
 
 interface AdminPlanFeature {
@@ -35,6 +35,7 @@ const adminPlansData: AdminPlanDetails[] = [
       { text: 'Community Forum Access', included: true },
       { text: 'Priority Support', included: false },
       { text: 'Access to Beta Features', included: false },
+      { text: 'Team & Collaboration Access', included: false },
     ],
   },
   {
@@ -50,6 +51,7 @@ const adminPlansData: AdminPlanDetails[] = [
       { text: 'Community Forum Access', included: true },
       { text: 'Priority Support', included: true },
       { text: 'Access to Beta Features', included: false },
+      { text: 'Team & Collaboration Access', included: false },
     ],
   },
   {
@@ -64,6 +66,7 @@ const adminPlansData: AdminPlanDetails[] = [
       { text: 'Community Forum Access', included: true },
       { text: 'Premium Support', included: true },
       { text: 'Access to Beta Features', included: true },
+      { text: 'Team & Collaboration Access', included: true },
     ],
   },
 ];
@@ -110,6 +113,7 @@ export default function ManageAdminSubscriptionsPage() {
                       <CheckCircle2 className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-green-500" /> :
                       <XCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-destructive/60" />
                     }
+                    {feature.text === 'Team & Collaboration Access' && feature.included ? <Group className="h-4 w-4 mr-1.5 inline-block text-blue-500" /> : null}
                     <span>{feature.text}</span>
                   </li>
                 ))}

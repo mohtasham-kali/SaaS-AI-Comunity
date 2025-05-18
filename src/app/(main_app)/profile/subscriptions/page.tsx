@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import type { Plan } from '@/types';
-import { CheckCircle, Gem, Loader2, Sparkles, Star, Zap } from 'lucide-react';
+import { CheckCircle, Gem, Loader2, Sparkles, Star, Zap, Group } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -39,6 +39,7 @@ const plansData: Omit<PlanDetails, 'isCurrent' | 'cta'>[] = [
       { text: 'Community Forum Access', included: true },
       { text: 'Priority Support', included: false },
       { text: 'Access to Beta Features', included: false },
+      { text: 'Team & Collaboration Access', included: false },
     ],
   },
   {
@@ -54,6 +55,7 @@ const plansData: Omit<PlanDetails, 'isCurrent' | 'cta'>[] = [
       { text: 'Community Forum Access', included: true },
       { text: 'Priority Support', included: true },
       { text: 'Access to Beta Features', included: false },
+      { text: 'Team & Collaboration Access', included: false },
     ],
   },
   {
@@ -68,6 +70,7 @@ const plansData: Omit<PlanDetails, 'isCurrent' | 'cta'>[] = [
       { text: 'Community Forum Access', included: true },
       { text: 'Premium Support', included: true },
       { text: 'Access to Beta Features', included: true },
+      { text: 'Team & Collaboration Access', included: true },
     ],
   },
 ];
@@ -158,7 +161,11 @@ export default function SubscriptionsPage() {
               <ul className="space-y-2 text-sm">
                 {plan.features.map((feature, index) => (
                   <li key={index} className={`flex items-center ${feature.included ? 'text-foreground' : 'text-muted-foreground line-through'}`}>
-                    <CheckCircle className={`h-4 w-4 mr-2 flex-shrink-0 ${feature.included ? 'text-green-500' : 'text-muted-foreground/50'}`} />
+                    {feature.included ? 
+                      <CheckCircle className={`h-4 w-4 mr-2 flex-shrink-0 text-green-500`} /> :
+                      <XCircle className={`h-4 w-4 mr-2 flex-shrink-0 text-destructive/60`} />
+                    }
+                    {feature.text === 'Team & Collaboration Access' && feature.included ? <Group className="h-4 w-4 mr-1.5 inline-block text-blue-500" /> : null}
                     {feature.text}
                   </li>
                 ))}
