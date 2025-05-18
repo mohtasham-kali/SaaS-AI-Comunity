@@ -45,7 +45,7 @@ export interface Post {
   isResolved: boolean;
 }
 
-export type Plan = "free" | "premium";
+export type Plan = "free" | "Standard" | "Community";
 
 export interface ActivityItem {
   id: string;

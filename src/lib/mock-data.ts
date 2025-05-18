@@ -1,5 +1,5 @@
 
-import type { UserProfile, Post, Comment, UploadedFile, ActivityItem } from '@/types';
+import type { UserProfile, Post, Comment, UploadedFile, ActivityItem, Plan } from '@/types';
 
 const mockUsers: UserProfile[] = [
   {
@@ -7,9 +7,9 @@ const mockUsers: UserProfile[] = [
     name: 'Alice Coder',
     email: 'alice@example.com',
     image: 'https://picsum.photos/seed/alice/200/200',
-    plan: 'premium',
-    aiResponsesToday: 2,
-    aiResponsesThisWeek: 5,
+    plan: 'Standard', // Updated plan
+    aiResponsesToday: 15, // Example usage for Standard
+    aiResponsesThisWeek: 50, // Example usage for Standard
     lastLogin: new Date().toISOString(),
     recentActivities: [
       { id: 'act1', type: 'forum_post', description: "Posted 'NullPointerException in Java Spring Boot App'", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), link: '/posts/post1' },
@@ -23,7 +23,7 @@ const mockUsers: UserProfile[] = [
     name: 'Bob Debugger',
     email: 'bob@example.com',
     image: 'https://picsum.photos/seed/bob/200/200',
-    plan: 'free',
+    plan: 'free', // Stays free
     aiResponsesToday: 1,
     aiResponsesThisWeek: 3,
     lastLogin: new Date().toISOString(),
@@ -36,22 +36,22 @@ const mockUsers: UserProfile[] = [
   {
     id: 'user3',
     name: 'AI Assistant',
-    email: 'ai@example.com', // Added an email for consistency, though not used for login
+    email: 'ai@example.com',
     image: 'https://picsum.photos/seed/ai/200/200',
-    plan: 'premium', // AI doesn't really have a plan, but for consistency
-    aiResponsesToday: 0,
+    plan: 'Community', // AI can be on Community
+    aiResponsesToday: 0, // AI doesn't consume its own limits
     aiResponsesThisWeek: 0,
     lastLogin: new Date().toISOString(),
-    recentActivities: [], // AI has no user-initiated activities
+    recentActivities: [],
   },
   {
     id: 'user4',
     name: 'Mohtasham Siddiqui',
     email: 'mohtasham.siddiqui17@gmail.com',
     image: 'https://picsum.photos/seed/mohtasham/200/200',
-    plan: 'free',
-    aiResponsesToday: 0,
-    aiResponsesThisWeek: 0,
+    plan: 'Community', // Updated plan
+    aiResponsesToday: 10, // Example usage for Community (though unlimited)
+    aiResponsesThisWeek: 50, // Example usage for Community (though unlimited)
     lastLogin: new Date().toISOString(),
     recentActivities: [
       { id: 'act7', type: 'login', description: "Logged in", timestamp: new Date(Date.now() - 1000 * 60 * 10).toISOString() },
@@ -249,4 +249,17 @@ export function addMockComment(postId: string, comment: Omit<Comment, 'id' | 'po
     };
     mockPosts[postIndex].comments.push(newComment); // Add to the comments array of the specific post
     return JSON.parse(JSON.stringify(newComment));
+}
+
+// Function to update a user's plan (mock)
+export function updateMockUserPlan(userId: string, newPlan: Plan): UserProfile | undefined {
+  const userIndex = mockUsers.findIndex(u => u.id === userId);
+  if (userIndex !== -1) {
+    mockUsers[userIndex].plan = newPlan;
+    // Optionally reset AI usage counts or adjust based on new plan
+    // For simplicity, we'll just update the plan here.
+    // Components will re-evaluate limits based on the new plan.
+    return JSON.parse(JSON.stringify(mockUsers[userIndex]));
+  }
+  return undefined;
 }

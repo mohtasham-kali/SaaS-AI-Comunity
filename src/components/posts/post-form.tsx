@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FileUploadButton } from "@/components/shared/file-upload-button";
-import type { Post, UploadedFile, UserProfile } from "@/types";
+import type { Post, UploadedFile, UserProfile, Plan } from "@/types";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -45,12 +45,17 @@ const postFormSchema = z.object({
 type PostFormValues = z.infer<typeof postFormSchema>;
 
 interface PostFormProps {
-  currentUser: UserProfile | null; // Pass current user for plan checks
-  post?: Post; // For editing mode
+  currentUser: UserProfile | null; 
+  post?: Post; 
 }
 
 const popularLanguages = ["javascript", "python", "java", "typescript", "csharp", "cpp", "php", "swift", "go", "ruby", "html", "css", "sql", "bash", "rust", "kotlin", "scala", "perl", "r"];
 
+const fileUploadLimitsByPlan = {
+  free: { maxFiles: 3, maxSizeMB: 5 },
+  Standard: { maxFiles: 10, maxSizeMB: 20 },
+  Community: { maxFiles: 20, maxSizeMB: 100 },
+};
 
 export function PostForm({ currentUser, post }: PostFormProps) {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(post?.files || []);
@@ -77,7 +82,6 @@ export function PostForm({ currentUser, post }: PostFormProps) {
     }
     setIsLoading(true);
     
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     try {
@@ -110,19 +114,16 @@ export function PostForm({ currentUser, post }: PostFormProps) {
   };
 
   const handleFilesSelected = (newFiles: UploadedFile[]) => {
-    const planLimits = currentUser?.plan === 'premium' 
-      ? { maxFiles: 10, maxSizeMB: 100 } 
-      : { maxFiles: 3, maxSizeMB: 5 };
-
+    const currentFileUploadLimits = fileUploadLimitsByPlan[currentUser?.plan || 'free'];
     const totalFilesAfterAdding = uploadedFiles.length + newFiles.length;
     
-    if (totalFilesAfterAdding > planLimits.maxFiles) {
+    if (totalFilesAfterAdding > currentFileUploadLimits.maxFiles) {
         toast({
             title: "File Limit Exceeded",
-            description: `You can upload a maximum of ${planLimits.maxFiles} files. ${newFiles.length - (totalFilesAfterAdding - planLimits.maxFiles)} files were added.`,
+            description: `You can upload a maximum of ${currentFileUploadLimits.maxFiles} files. Only some files were added.`,
             variant: "destructive",
         });
-        const filesToAdd = newFiles.slice(0, planLimits.maxFiles - uploadedFiles.length);
+        const filesToAdd = newFiles.slice(0, currentFileUploadLimits.maxFiles - uploadedFiles.length);
         setUploadedFiles(prev => [...prev, ...filesToAdd]);
     } else {
         setUploadedFiles(prev => [...prev, ...newFiles]);
@@ -132,6 +133,8 @@ export function PostForm({ currentUser, post }: PostFormProps) {
   const removeFile = (fileId: string) => {
     setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
   };
+  
+  const currentFileUploadLimits = fileUploadLimitsByPlan[currentUser?.plan || 'free'];
 
   return (
     <Card className="max-w-3xl mx-auto shadow-xl">
@@ -189,7 +192,7 @@ export function PostForm({ currentUser, post }: PostFormProps) {
                   <FormControl>
                     <Textarea
                       placeholder="// Paste relevant code here. Keep it concise."
-                      className="min-h-[200px] font-mono text-sm p-3" // Ensure font-mono is applied
+                      className="min-h-[200px] font-mono text-sm p-3" 
                       {...field}
                     />
                   </FormControl>
@@ -252,7 +255,7 @@ export function PostForm({ currentUser, post }: PostFormProps) {
               <FileUploadButton onFilesSelected={handleFilesSelected} currentPlan={currentUser?.plan}/>
               {uploadedFiles.length > 0 && (
                 <div className="mt-4 space-y-3">
-                  <p className="text-sm font-medium">Selected files ({uploadedFiles.length}):</p>
+                  <p className="text-sm font-medium">Selected files ({uploadedFiles.length} / {currentFileUploadLimits.maxFiles}):</p>
                   <ul className="list-none p-0 space-y-2">
                     {uploadedFiles.map(file => (
                       <li key={file.id} className="flex items-center justify-between text-sm p-3 border rounded-lg bg-muted/50 shadow-sm">

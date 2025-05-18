@@ -9,22 +9,16 @@ import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Mail, CalendarDays, Activity, ShieldCheck, Zap, Edit3, LogOutIcon } from 'lucide-react';
+import { Mail, CalendarDays, Activity, ShieldCheck, Zap, Edit3, LogOutIcon, Gem } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import type { Plan } from '@/types';
 
 export default function ProfilePage() {
   const { currentUser, loading, logout } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-
-  // MainAppLayout handles auth check, so local redirect is no longer needed here.
-  // useEffect(() => {
-  //   if (!loading && !currentUser) {
-  //     router.push('/login?redirect=/profile');
-  //   }
-  // }, [currentUser, loading, router]);
 
   useEffect(() => {
     if (currentUser?.name) {
@@ -40,11 +34,9 @@ export default function ProfilePage() {
     return names.length > 1 ? names[0][0].toUpperCase() + names[names.length - 1][0].toUpperCase() : name.substring(0, 2).toUpperCase();
   };
 
-  // Loading state is handled by MainAppLayout, but we can keep a skeleton for content loading if needed.
-  // However, since MainAppLayout waits for currentUser, this specific skeleton might not be shown often.
-  if (loading || !currentUser) { // This check ensures currentUser is available, though MainAppLayout should guarantee it.
+  if (loading || !currentUser) { 
     return (
-        <div className="w-full max-w-2xl mx-auto"> {/* Added mx-auto to center skeleton within layout's padding */}
+        <div className="w-full max-w-2xl mx-auto">
             <Card className="shadow-xl">
             <CardHeader className="items-center text-center p-8 bg-muted/30">
                 <Skeleton className="h-24 w-24 rounded-full mb-4 border-4 border-primary" />
@@ -89,8 +81,14 @@ export default function ProfilePage() {
     );
   }
   
-  // Removed outer container div as MainAppLayout provides padding.
-  // The Card component is now the top-level element for the page content.
+  const planConfig = {
+    free: { dailyLimit: 3, weeklyLimit: 10, badgeVariant: 'secondary' as const, icon: ShieldCheck },
+    Standard: { dailyLimit: 50, weeklyLimit: 200, badgeVariant: 'default' as const, icon: Star },
+    Community: { dailyLimit: Infinity, weeklyLimit: Infinity, badgeVariant: 'default' as const, icon: Gem, badgeClass: 'bg-purple-600 hover:bg-purple-700 text-white' }
+  };
+  const currentPlanConfig = planConfig[currentUser.plan];
+
+
   return (
       <Card className="max-w-2xl mx-auto shadow-2xl overflow-hidden">
         <CardHeader className="items-center text-center p-8 bg-gradient-to-br from-muted/50 to-muted/20">
@@ -104,10 +102,10 @@ export default function ProfilePage() {
         <CardContent className="p-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex items-center space-x-4 p-4 border rounded-lg bg-background shadow-sm hover:shadow-md transition-shadow">
-              <ShieldCheck className="h-8 w-8 text-primary flex-shrink-0" />
+              <currentPlanConfig.icon className="h-8 w-8 text-primary flex-shrink-0" />
               <div>
                 <p className="text-sm text-muted-foreground">Current Plan</p>
-                <Badge variant={currentUser.plan === 'premium' ? 'default' : 'secondary'} className={`capitalize text-base px-3 py-1 ${currentUser.plan === 'premium' ? 'bg-primary text-primary-foreground' : ''}`}>
+                <Badge variant={currentPlanConfig.badgeVariant} className={`capitalize text-base px-3 py-1 ${currentPlanConfig.badgeClass || (currentUser.plan !== 'free' ? 'bg-primary text-primary-foreground' : '')}`}>
                   {currentUser.plan}
                 </Badge>
               </div>
@@ -124,28 +122,36 @@ export default function ProfilePage() {
           
           <Card className="bg-background shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
-              <CardTitle className="text-xl flex items-center"><Activity className="h-6 w-6 mr-2 text-primary" />Usage Statistics (Mock)</CardTitle>
+              <CardTitle className="text-xl flex items-center"><Activity className="h-6 w-6 mr-2 text-primary" />Usage Statistics</CardTitle>
               <CardDescription>Your AI interaction limits for the current plan.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
                 <div className="p-4 border rounded-md bg-muted/30">
                     <p className="text-muted-foreground mb-1">AI Responses Today:</p>
-                    <p className="font-semibold text-2xl">{currentUser.aiResponsesToday} / <span className="text-base">{currentUser.plan === 'free' ? 3 : 'Unlimited'}</span></p>
+                    <p className="font-semibold text-2xl">{currentUser.aiResponsesToday} / <span className="text-base">{currentPlanConfig.dailyLimit === Infinity ? 'Unlimited' : currentPlanConfig.dailyLimit}</span></p>
                 </div>
                 <div className="p-4 border rounded-md bg-muted/30">
                     <p className="text-muted-foreground mb-1">AI Responses This Week:</p>
-                    <p className="font-semibold text-2xl">{currentUser.aiResponsesThisWeek} / <span className="text-base">{currentUser.plan === 'free' ? 10 : 'Unlimited'}</span></p>
+                    <p className="font-semibold text-2xl">{currentUser.aiResponsesThisWeek} / <span className="text-base">{currentPlanConfig.weeklyLimit === Infinity ? 'Unlimited' : currentPlanConfig.weeklyLimit}</span></p>
                 </div>
             </CardContent>
           </Card>
 
-          {currentUser.plan === 'free' && (
+          {currentUser.plan !== 'Community' && (
             <Button size="lg" className="w-full bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 text-primary-foreground shadow-lg text-base py-6" asChild>
-              <Link href="/premium-features"> 
-                <Zap className="mr-2 h-5 w-5" /> Upgrade to Premium
+              <Link href="/profile/subscriptions"> 
+                <Zap className="mr-2 h-5 w-5" /> 
+                {currentUser.plan === 'free' ? 'Upgrade to Standard or Community' : 'Upgrade to Community'}
               </Link>
             </Button>
           )}
+           {currentUser.plan === 'Community' && (
+             <Button size="lg" className="w-full text-primary-foreground shadow-lg text-base py-6 bg-purple-600 hover:bg-purple-700" asChild>
+               <Link href="/profile/subscriptions"> 
+                 <Gem className="mr-2 h-5 w-5" /> Manage Subscription
+               </Link>
+             </Button>
+           )}
           
           <div className="flex flex-col sm:flex-row gap-4 mt-8 pt-6 border-t">
             <Button variant="outline" className="w-full sm:w-auto text-base py-3" onClick={() => { toast({title: "Feature Coming Soon!", description: "Editing profiles, changing passwords, and managing notifications will be available shortly."}) }}><Edit3 className="mr-2 h-4 w-4"/>Edit Profile</Button>
@@ -155,4 +161,3 @@ export default function ProfilePage() {
       </Card>
   );
 }
-

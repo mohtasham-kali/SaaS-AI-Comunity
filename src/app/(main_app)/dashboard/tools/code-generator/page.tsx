@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea';
 import { FileUploadButton } from '@/components/shared/file-upload-button';
 import { CodeBlock } from '@/components/shared/code-block';
-import type { UploadedFile } from '@/types';
+import type { UploadedFile, Plan } from '@/types';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { suggestCodeSolutions, type SuggestCodeSolutionsInput, type SuggestCodeSolutionsOutput } from '@/ai/flows/suggest-code-solutions';
@@ -22,6 +22,12 @@ const fileToDataUri = (file: File): Promise<string> =>
     reader.readAsDataURL(file);
   });
 
+const planAiLimits = {
+  free: { daily: 3, weekly: 10 },
+  Standard: { daily: 50, weekly: 200 },
+  Community: { daily: Infinity, weekly: Infinity },
+};
+
 export default function CodeGeneratorPage() {
   const [promptText, setPromptText] = useState('');
   const [rawFiles, setRawFiles] = useState<File[]>([]);
@@ -34,36 +40,37 @@ export default function CodeGeneratorPage() {
 
   const { currentUser } = useAuth();
   const { toast } = useToast();
+  
+  const fileUploadLimitsByPlan = {
+    free: { maxFiles: 3, maxSizeMB: 5 },
+    Standard: { maxFiles: 10, maxSizeMB: 20 },
+    Community: { maxFiles: 20, maxSizeMB: 100 },
+  };
+  const currentFileUploadLimits = fileUploadLimitsByPlan[currentUser?.plan || 'free'];
 
   const handleFilesSelectedForPreview = (newFilePreviews: UploadedFile[]) => {
-    setFilePreviews(prev => [...prev, ...newFilePreviews].slice(0, planLimits.maxFiles));
+    setFilePreviews(prev => [...prev, ...newFilePreviews].slice(0, currentFileUploadLimits.maxFiles));
   };
 
   const handleRawFilesSelected = (newRawFiles: File[]) => {
-    setRawFiles(prev => [...prev, ...newRawFiles].slice(0, planLimits.maxFiles));
-     // Sync filePreviews if rawFiles are source of truth for count
+    setRawFiles(prev => [...prev, ...newRawFiles].slice(0, currentFileUploadLimits.maxFiles));
     const newPreviews = newRawFiles.map((file, index) => ({
-        id: `temp-raw-${Date.now()}-${index}`, // ensure unique ID for previews from raw files
+        id: `temp-raw-${Date.now()}-${index}`, 
         name: file.name,
         url: URL.createObjectURL(file),
         type: file.type,
         size: file.size,
     }));
     setFilePreviews(prev => {
-        // This logic ensures previews match the raw files state if onRawFilesSelected is primary
         const currentPreviewNames = new Set(prev.map(f => f.name));
         const trulyNewPreviews = newPreviews.filter(np => !currentPreviewNames.has(np.name));
-        return [...prev, ...trulyNewPreviews].slice(0, planLimits.maxFiles);
+        return [...prev, ...trulyNewPreviews].slice(0, currentFileUploadLimits.maxFiles);
     });
   };
   
-  const planLimits = currentUser?.plan === 'premium' 
-      ? { maxFiles: 10, maxSizeMB: 100 } 
-      : { maxFiles: 3, maxSizeMB: 5 };
-
   const removeFile = (fileIdToRemove: string, fileNameToRemove: string) => {
     setFilePreviews(prev => prev.filter(f => f.id !== fileIdToRemove));
-    setRawFiles(prev => prev.filter(f => f.name !== fileNameToRemove)); // Assuming name is unique enough for this demo
+    setRawFiles(prev => prev.filter(f => f.name !== fileNameToRemove)); 
   };
 
   const handleGenerateCode = async () => {
@@ -75,8 +82,21 @@ export default function CodeGeneratorPage() {
       toast({ title: "Authentication Error", description: "You must be logged in.", variant: "destructive" });
       return;
     }
-    if (currentUser.plan === 'free' && (currentUser.aiResponsesToday >= 3 || currentUser.aiResponsesThisWeek >= 10)) {
-      toast({ title: "AI Limit Reached", description: `Free plan AI response limit reached. Today: ${currentUser.aiResponsesToday}/3, Week: ${currentUser.aiResponsesThisWeek}/10. Upgrade to premium for more.`, variant: "destructive" });
+
+    const limits = planAiLimits[currentUser.plan];
+    let toastDescription = "";
+    let limitReached = false;
+
+    if (currentUser.plan === 'free' && (currentUser.aiResponsesToday >= limits.daily || currentUser.aiResponsesThisWeek >= limits.weekly)) {
+        limitReached = true;
+        toastDescription = `Free plan AI response limit reached. Today: ${currentUser.aiResponsesToday}/${limits.daily}, Week: ${currentUser.aiResponsesThisWeek}/${limits.weekly}. Upgrade for more.`;
+    } else if (currentUser.plan === 'Standard' && (currentUser.aiResponsesToday >= limits.daily || currentUser.aiResponsesThisWeek >= limits.weekly)) {
+        limitReached = true;
+        toastDescription = `Standard plan AI response limit reached. Today: ${currentUser.aiResponsesToday}/${limits.daily}, Week: ${currentUser.aiResponsesThisWeek}/${limits.weekly}. Upgrade for more.`;
+    }
+    
+    if (limitReached) {
+      toast({ title: "AI Limit Reached", description: toastDescription, variant: "destructive" });
       return;
     }
 
@@ -147,11 +167,11 @@ export default function CodeGeneratorPage() {
               onFilesSelected={handleFilesSelectedForPreview}
               onRawFilesSelected={handleRawFilesSelected}
               currentPlan={currentUser?.plan}
-              accept="image/*" // Only accept images for this tool
+              accept="image/*" 
             />
             {filePreviews.length > 0 && (
               <div className="mt-4 space-y-3">
-                <p className="text-sm font-medium">Selected images ({filePreviews.length}):</p>
+                <p className="text-sm font-medium">Selected images ({filePreviews.length} / {currentFileUploadLimits.maxFiles}):</p>
                 <ul className="list-none p-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {filePreviews.map(file => (
                     <li key={file.id} className="relative group p-2 border rounded-lg bg-muted/50 shadow-sm aspect-square flex items-center justify-center">
@@ -215,7 +235,7 @@ export default function CodeGeneratorPage() {
             {generatedCode && (
               <div>
                 <h3 className="text-xl font-semibold mb-2">Generated Code:</h3>
-                <CodeBlock code={generatedCode} language="typescript" /> {/* Assuming TSX/JS, adjust if needed */}
+                <CodeBlock code={generatedCode} language="typescript" /> 
               </div>
             )}
           </CardContent>

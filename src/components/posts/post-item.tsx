@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { Post, Comment, UploadedFile, UserProfile } from '@/types';
+import type { Post, Comment, UploadedFile, UserProfile, Plan } from '@/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ import { useAuth } from '@/components/auth/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { addMockComment, getMockUserById } from '@/lib/mock-data';
 import { suggestWorkingCodeSolutions, type SuggestWorkingCodeSolutionsInput, type SuggestWorkingCodeSolutionsOutput } from '@/ai/flows/suggest-working-code-solutions';
-import NextImage from "next/image"; // Renamed to avoid conflict with ImageIcon
+import NextImage from "next/image"; 
 import Link from 'next/link';
 
 interface PostItemProps {
@@ -30,6 +30,12 @@ const commentSchema = z.object({
   content: z.string().min(1, "Comment cannot be empty.").max(2000, "Comment too long."),
 });
 type CommentFormValues = z.infer<typeof commentSchema>;
+
+const planAiLimits = {
+  free: { daily: 3, weekly: 10 },
+  Standard: { daily: 50, weekly: 200 },
+  Community: { daily: Infinity, weekly: Infinity },
+};
 
 export function PostItem({ post: initialPost }: PostItemProps) {
   const [post, setPost] = useState<Post>(initialPost);
@@ -53,7 +59,6 @@ export function PostItem({ post: initialPost }: PostItemProps) {
       toast({ title: "Not Logged In", description: "Please log in to comment.", variant: "destructive" });
       return;
     }
-    // Simulate adding comment
     const newComment = addMockComment(post.id, { content: values.content, isAI: false }, currentUser.id);
     setPost(prevPost => ({
       ...prevPost,
@@ -69,39 +74,33 @@ export function PostItem({ post: initialPost }: PostItemProps) {
       return;
     }
     
-    if (currentUser.plan === 'free' && (currentUser.aiResponsesToday >= 3 || currentUser.aiResponsesThisWeek >= 10) ) {
-        toast({ title: "AI Limit Reached", description: `Free plan AI response limit reached. Today: ${currentUser.aiResponsesToday}/3, Week: ${currentUser.aiResponsesThisWeek}/10.`, variant: "destructive" });
+    const limits = planAiLimits[currentUser.plan];
+    let toastDescription = "";
+    let limitReached = false;
+
+    if (currentUser.plan === 'free' && (currentUser.aiResponsesToday >= limits.daily || currentUser.aiResponsesThisWeek >= limits.weekly)) {
+        limitReached = true;
+        toastDescription = `Free plan AI response limit reached. Today: ${currentUser.aiResponsesToday}/${limits.daily}, Week: ${currentUser.aiResponsesThisWeek}/${limits.weekly}. Upgrade for more.`;
+    } else if (currentUser.plan === 'Standard' && (currentUser.aiResponsesToday >= limits.daily || currentUser.aiResponsesThisWeek >= limits.weekly)) {
+        limitReached = true;
+        toastDescription = `Standard plan AI response limit reached. Today: ${currentUser.aiResponsesToday}/${limits.daily}, Week: ${currentUser.aiResponsesThisWeek}/${limits.weekly}. Upgrade for more.`;
+    }
+    
+    if (limitReached) {
+        toast({ title: "AI Limit Reached", description: toastDescription, variant: "destructive" });
         return;
     }
 
     setIsAiLoading(true);
     try {
-      const fileDataUris: string[] = [];
-      // This is a basic example. For production, consider security and efficiency.
-      // Only works if files are accessible via their URL or if you fetch and convert them.
-      // For now, we assume the AI can handle URLs or we'd need to implement actual data URI conversion.
-      // for (const file of post.files) {
-      //   if (file.url) { // Assuming file.url is a public URL the AI can access
-      //     // If AI requires data URIs, you'd fetch and convert:
-      //     // const response = await fetch(file.url);
-      //     // const blob = await response.blob();
-      //     // const reader = new FileReader();
-      //     // reader.readAsDataURL(blob);
-      //     // await new Promise(resolve => reader.onload = () => resolve(reader.result));
-      //     // fileDataUris.push(reader.result as string);
-      //     // For simplicity if AI can use URLs (some models might not):
-      //     fileDataUris.push(file.url); 
-      //   }
-      // }
-      
       const input: SuggestWorkingCodeSolutionsInput = {
         codingProblem: post.description,
         codeSnippet: post.codeSnippet,
-        // uploadedFiles: fileDataUris.length > 0 ? fileDataUris : undefined,
+        // uploadedFiles: fileDataUris.length > 0 ? fileDataUris : undefined, // Not passing files for now
       };
       const aiResponse: SuggestWorkingCodeSolutionsOutput = await suggestWorkingCodeSolutions(input);
       
-      const aiUser = getMockUserById('user3') || { id: 'user3', name: 'AI Assistant', image: 'https://picsum.photos/seed/ai/40/40', plan: 'premium', aiResponsesToday:0, aiResponsesThisWeek:0, lastLogin: new Date().toISOString() } as UserProfile;
+      const aiUser = getMockUserById('user3') || { id: 'user3', name: 'AI Assistant', image: 'https://picsum.photos/seed/ai/40/40', plan: 'Community', aiResponsesToday:0, aiResponsesThisWeek:0, lastLogin: new Date().toISOString() } as UserProfile;
 
       const aiComment: Comment = {
         id: `comment-ai-${Date.now()}`,
@@ -119,10 +118,9 @@ export function PostItem({ post: initialPost }: PostItemProps) {
         comments: [...prevPost.comments, aiComment],
       }));
       
-      if (currentUser) { // Should always be true due to earlier check
+      if (currentUser) { 
         currentUser.aiResponsesToday = (currentUser.aiResponsesToday || 0) + 1;
         currentUser.aiResponsesThisWeek = (currentUser.aiResponsesThisWeek || 0) + 1;
-         // In a real app, persist this change for currentUser
       }
 
       toast({ title: "AI Suggestion Received", description: "AI has provided a solution." });
@@ -145,7 +143,7 @@ export function PostItem({ post: initialPost }: PostItemProps) {
       if (post.comments.filter(c => !c.isAI).length === 0) {
         setShowAiPromptButton(true);
       }
-    }, 10 * 60 * 1000); // 10 minutes
+    }, 10 * 60 * 1000); 
     return () => clearTimeout(timer);
   }, [post.comments, post.createdAt]);
 
@@ -153,7 +151,6 @@ export function PostItem({ post: initialPost }: PostItemProps) {
   const getFileIcon = (fileType: string) => {
     if (fileType.startsWith('image/')) return <ImageIcon className="h-5 w-5 text-primary" />;
     if (fileType === 'application/pdf') return <FileText className="h-5 w-5 text-primary" />;
-    // Add more specific icons for code files based on extension if needed
     return <Paperclip className="h-5 w-5 text-primary" />;
   };
 
@@ -262,8 +259,6 @@ export function PostItem({ post: initialPost }: PostItemProps) {
         </div>
       )}
 
-
-      {/* Comments Section */}
       <div className="space-y-6">
         <h3 className="text-xl font-semibold text-foreground border-b pb-2">
           {post.comments.length} Comment{post.comments.length === 1 ? '' : 's'}
@@ -302,7 +297,6 @@ export function PostItem({ post: initialPost }: PostItemProps) {
         ))}
       </div>
 
-      {/* Add Comment Form */}
       {currentUser && (
         <Card className="shadow-lg">
             <CardHeader><CardTitle className="text-xl">Leave a Comment</CardTitle></CardHeader>
@@ -340,4 +334,3 @@ export function PostItem({ post: initialPost }: PostItemProps) {
     </div>
   );
 }
-

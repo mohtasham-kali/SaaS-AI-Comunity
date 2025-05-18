@@ -5,57 +5,53 @@ import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import type { ChangeEvent } from "react";
 import { useRef } from "react";
-import type { UploadedFile } from "@/types";
+import type { UploadedFile, Plan } from "@/types"; // Ensure Plan is imported
 
 interface FileUploadButtonProps {
   onFilesSelected: (files: UploadedFile[]) => void;
-  onRawFilesSelected?: (files: File[]) => void; // Optional: For direct File object access
-  maxFiles?: number;
-  maxSizeMB?: number; // Max size per file in MB
-  currentPlan?: "free" | "premium";
-  accept?: string; // Added accept prop
+  onRawFilesSelected?: (files: File[]) => void;
+  currentPlan?: Plan; // Use the Plan type
+  accept?: string;
 }
+
+const fileUploadLimitsByPlan = {
+  free: { maxFiles: 3, maxSizeMB: 5 },
+  Standard: { maxFiles: 10, maxSizeMB: 20 },
+  Community: { maxFiles: 20, maxSizeMB: 100 },
+};
 
 export function FileUploadButton({ 
   onFilesSelected, 
   onRawFilesSelected,
   currentPlan = "free",
-  accept = "image/*,application/pdf,.doc,.docx,.txt,.js,.ts,.py,.java,.c,.cpp,.cs,.html,.css,.json,.xml" // Default accept
+  accept = "image/*,application/pdf,.doc,.docx,.txt,.js,.ts,.py,.java,.c,.cpp,.cs,.html,.css,.json,.xml" 
 }: FileUploadButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const planLimits = {
-    free: { maxFiles: 3, maxSizeMB: 5 },
-    premium: { maxFiles: 10, maxSizeMB: 100 },
-  };
-
-  const limits = planLimits[currentPlan];
+  const limits = fileUploadLimitsByPlan[currentPlan];
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const filesArray = Array.from(event.target.files);
       
       const validRawFiles: File[] = filesArray
-        .filter(file => file.size <= limits.maxSizeMB * 1024 * 1024) // Respect max size limit
-        .slice(0, limits.maxFiles); // Respect max files limit after filtering by size
+        .filter(file => file.size <= limits.maxSizeMB * 1024 * 1024) 
+        .slice(0, limits.maxFiles); 
 
       const selectedUploadedFiles: UploadedFile[] = validRawFiles
         .map((file, index) => ({
           id: `temp-file-${Date.now()}-${index}`,
           name: file.name,
-          url: URL.createObjectURL(file), // Temporary URL for preview
+          url: URL.createObjectURL(file), 
           type: file.type,
           size: file.size,
         }));
       
-      // TODO: Add toast notifications for exceeding limits (if any files were filtered out)
-
       onFilesSelected(selectedUploadedFiles);
       if (onRawFilesSelected) {
         onRawFilesSelected(validRawFiles);
       }
       
-      // Reset file input to allow selecting the same file again
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -86,4 +82,3 @@ export function FileUploadButton({
     </>
   );
 }
-

@@ -20,7 +20,7 @@ import {
   Home, 
   User,
   Settings,
-  ShieldCheck,
+  Gem, // Changed from ShieldCheck
   Users,
   FileStack,
   CreditCard,
@@ -46,17 +46,17 @@ const mainNavGroups: NavGroup[] = [
   {
     label: 'Main',
     items: [
-      { href: '/forum', label: 'Forum', icon: Home, matchStartsWith: true }, // Using Home for Forum as per common practice & image context
+      { href: '/forum', label: 'Forum', icon: Home, matchStartsWith: true },
       { href: '/dashboard', label: 'Dashboard', icon: Briefcase },
-      { href: '/analytics', label: 'Analytics', icon: AreaChart }, // Changed from BarChart3 to AreaChart as per earlier structure
+      { href: '/analytics', label: 'Analytics', icon: AreaChart },
     ],
   },
   {
     label: 'Account',
     items: [
       { href: '/profile', label: 'Profile', icon: User },
+      { href: '/profile/subscriptions', label: 'Subscriptions', icon: Gem }, // Updated
       { href: '/settings', label: 'Settings', icon: Settings },
-      { href: '/premium-features', label: 'Premium Features', icon: ShieldCheck },
     ],
   },
 ];
@@ -78,17 +78,17 @@ const AppSidebarContent = () => {
 
   const handleLogout = () => {
     logout();
-    router.push('/'); // Redirect to home/login page after logout
+    router.push('/'); 
   };
 
-  if (loading) { // Removed !currentUser check here as layout already handles redirect
+  if (loading) { 
     return (
       <>
         <SidebarHeader className="p-4">
           <Skeleton className="h-8 w-32" />
         </SidebarHeader>
         <SidebarContent className="p-4 space-y-2">
-          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-8 w-full mb-1" />)}
+          {[...Array(7)].map((_, i) => <Skeleton key={i} className="h-8 w-full mb-1" />)}
         </SidebarContent>
         <SidebarFooter className="p-4">
           <Skeleton className="h-10 w-full" />

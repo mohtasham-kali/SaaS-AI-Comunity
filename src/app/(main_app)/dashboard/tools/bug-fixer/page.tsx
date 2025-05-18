@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { FileUploadButton } from '@/components/shared/file-upload-button';
 import { CodeBlock } from '@/components/shared/code-block';
-import type { UploadedFile } from '@/types';
+import type { UploadedFile, Plan } from '@/types';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useToast } from '@/hooks/use-toast';
 import { debugCode, type DebugCodeInput, type DebugCodeOutput } from '@/ai/flows/debug-code';
@@ -22,6 +22,12 @@ const fileToDataUri = (file: File): Promise<string> =>
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+  
+const planAiLimits = {
+  free: { daily: 3, weekly: 10 },
+  Standard: { daily: 50, weekly: 200 },
+  Community: { daily: Infinity, weekly: Infinity }, // Representing unlimited
+};
 
 export default function BugFixerPage() {
   const [problemDescription, setProblemDescription] = useState('');
@@ -37,20 +43,24 @@ export default function BugFixerPage() {
   const { currentUser } = useAuth();
   const { toast } = useToast();
 
-  const planLimits = currentUser?.plan === 'premium' 
-      ? { maxFiles: 10, maxSizeMB: 10 } // Example: Premium might have higher limits or more file types
-      : { maxFiles: 3, maxSizeMB: 5 };
+  const fileUploadLimitsByPlan = {
+    free: { maxFiles: 3, maxSizeMB: 5 },
+    Standard: { maxFiles: 10, maxSizeMB: 20 },
+    Community: { maxFiles: 20, maxSizeMB: 100 },
+  };
+  const currentFileUploadLimits = fileUploadLimitsByPlan[currentUser?.plan || 'free'];
+
 
   const handleFilesSelectedForPreview = (newFilePreviews: UploadedFile[]) => {
      setFilePreviews(prev => {
         const combined = [...prev, ...newFilePreviews];
-        if (combined.length > planLimits.maxFiles) {
+        if (combined.length > currentFileUploadLimits.maxFiles) {
             toast({
                 title: "File Limit Exceeded",
-                description: `You can upload a maximum of ${planLimits.maxFiles} files. ${combined.length - planLimits.maxFiles} files were not added.`,
+                description: `You can upload a maximum of ${currentFileUploadLimits.maxFiles} files. ${combined.length - currentFileUploadLimits.maxFiles} files were not added.`,
                 variant: "destructive",
             });
-            return combined.slice(0, planLimits.maxFiles);
+            return combined.slice(0, currentFileUploadLimits.maxFiles);
         }
         return combined;
     });
@@ -59,9 +69,8 @@ export default function BugFixerPage() {
   const handleRawFilesSelected = (newRawFiles: File[]) => {
     setRawFiles(prev => {
         const combined = [...prev, ...newRawFiles];
-         if (combined.length > planLimits.maxFiles) {
-            // Toast notification for this is handled by FileUploadButton or handleFilesSelectedForPreview
-            return combined.slice(0, planLimits.maxFiles);
+         if (combined.length > currentFileUploadLimits.maxFiles) {
+            return combined.slice(0, currentFileUploadLimits.maxFiles);
         }
         return combined;
     });
@@ -76,7 +85,6 @@ export default function BugFixerPage() {
     if (fileType.startsWith('image/')) return <ImageIconLucide className="h-5 w-5 text-primary flex-shrink-0" />;
     if (fileType === 'application/pdf') return <FileText className="h-5 w-5 text-rose-500 flex-shrink-0" />;
     if (fileType.startsWith('text/')) return <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />;
-    // Add more specific icons for code files based on extension if needed
     return <Paperclip className="h-5 w-5 text-muted-foreground flex-shrink-0" />;
   };
 
@@ -89,8 +97,21 @@ export default function BugFixerPage() {
       toast({ title: "Authentication Error", description: "You must be logged in.", variant: "destructive" });
       return;
     }
-    if (currentUser.plan === 'free' && (currentUser.aiResponsesToday >= 3 || currentUser.aiResponsesThisWeek >= 10)) {
-      toast({ title: "AI Limit Reached", description: `Free plan AI response limit reached. Today: ${currentUser.aiResponsesToday}/3, Week: ${currentUser.aiResponsesThisWeek}/10. Upgrade for more.`, variant: "destructive" });
+
+    const limits = planAiLimits[currentUser.plan];
+    let toastDescription = "";
+    let limitReached = false;
+
+    if (currentUser.plan === 'free' && (currentUser.aiResponsesToday >= limits.daily || currentUser.aiResponsesThisWeek >= limits.weekly)) {
+        limitReached = true;
+        toastDescription = `Free plan AI response limit reached. Today: ${currentUser.aiResponsesToday}/${limits.daily}, Week: ${currentUser.aiResponsesThisWeek}/${limits.weekly}. Upgrade for more.`;
+    } else if (currentUser.plan === 'Standard' && (currentUser.aiResponsesToday >= limits.daily || currentUser.aiResponsesThisWeek >= limits.weekly)) {
+        limitReached = true;
+        toastDescription = `Standard plan AI response limit reached. Today: ${currentUser.aiResponsesToday}/${limits.daily}, Week: ${currentUser.aiResponsesThisWeek}/${limits.weekly}. Upgrade for more.`;
+    }
+
+    if (limitReached) {
+      toast({ title: "AI Limit Reached", description: toastDescription, variant: "destructive" });
       return;
     }
 
@@ -117,7 +138,6 @@ export default function BugFixerPage() {
       
       currentUser.aiResponsesToday = (currentUser.aiResponsesToday || 0) + 1;
       currentUser.aiResponsesThisWeek = (currentUser.aiResponsesThisWeek || 0) + 1;
-      // In a real app, this user update should be persisted to the backend.
       toast({ title: "Analysis Complete!", description: "AI has provided suggestions." });
 
     } catch (err) {
@@ -190,7 +210,7 @@ export default function BugFixerPage() {
             />
             {filePreviews.length > 0 && (
               <div className="mt-4 space-y-3">
-                <p className="text-sm font-medium">Selected files ({filePreviews.length} / {planLimits.maxFiles}):</p>
+                <p className="text-sm font-medium">Selected files ({filePreviews.length} / {currentFileUploadLimits.maxFiles}):</p>
                 <ul className="list-none p-0 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {filePreviews.map(file => (
                     <li key={file.id} className="relative group p-3 border rounded-lg bg-muted/50 shadow-sm flex items-center space-x-3">
@@ -289,4 +309,3 @@ export default function BugFixerPage() {
     </div>
   );
 }
-
