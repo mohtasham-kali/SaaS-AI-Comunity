@@ -20,13 +20,14 @@ import {
   Home, 
   User,
   Settings,
-  Gem, // Changed from ShieldCheck
-  Users,
+  Gem,
+  Users as AdminUsersIcon, // Renamed to avoid conflict
   FileStack,
   CreditCard,
   LogOut,
   Briefcase, 
-  AreaChart, 
+  AreaChart,
+  Group, // Added for Collaboration
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -49,13 +50,14 @@ const mainNavGroups: NavGroup[] = [
       { href: '/forum', label: 'Forum', icon: Home, matchStartsWith: true },
       { href: '/dashboard', label: 'Dashboard', icon: Briefcase },
       { href: '/analytics', label: 'Analytics', icon: AreaChart },
+      { href: '/collaboration', label: 'Collaboration', icon: Group }, // Added Collaboration
     ],
   },
   {
     label: 'Account',
     items: [
       { href: '/profile', label: 'Profile', icon: User },
-      { href: '/profile/subscriptions', label: 'Subscriptions', icon: Gem }, // Updated
+      { href: '/profile/subscriptions', label: 'Subscriptions', icon: Gem },
       { href: '/settings', label: 'Settings', icon: Settings },
     ],
   },
@@ -64,7 +66,7 @@ const mainNavGroups: NavGroup[] = [
 const adminNavGroup: NavGroup = {
   label: 'Admin',
   items: [
-    { href: '/admin/manage-users', label: 'Manage Users', icon: Users },
+    { href: '/admin/manage-users', label: 'Manage Users', icon: AdminUsersIcon },
     { href: '/admin/manage-posts', label: 'Manage Posts', icon: FileStack },
     { href: '/admin/subscriptions', label: 'Subscriptions', icon: CreditCard },
   ],
@@ -88,7 +90,7 @@ const AppSidebarContent = () => {
           <Skeleton className="h-8 w-32" />
         </SidebarHeader>
         <SidebarContent className="p-4 space-y-2">
-          {[...Array(7)].map((_, i) => <Skeleton key={i} className="h-8 w-full mb-1" />)}
+          {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-8 w-full mb-1" />)} 
         </SidebarContent>
         <SidebarFooter className="p-4">
           <Skeleton className="h-10 w-full" />
