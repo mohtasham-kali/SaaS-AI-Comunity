@@ -24,8 +24,19 @@ const mockUsers: UserProfile[] = [
   {
     id: 'user3',
     name: 'AI Assistant',
+    email: 'ai@example.com', // Added an email for consistency, though not used for login
     image: 'https://picsum.photos/seed/ai/200/200',
     plan: 'premium', // AI doesn't really have a plan, but for consistency
+    aiResponsesToday: 0,
+    aiResponsesThisWeek: 0,
+    lastLogin: new Date().toISOString(),
+  },
+  {
+    id: 'user4',
+    name: 'Mohtasham Siddiqui',
+    email: 'mohtasham.siddiqui17@gmail.com',
+    image: 'https://picsum.photos/seed/mohtasham/200/200',
+    plan: 'free',
     aiResponsesToday: 0,
     aiResponsesThisWeek: 0,
     lastLogin: new Date().toISOString(),
@@ -93,7 +104,7 @@ public class MyService {
     user: mockUsers.find(u => u.id === 'user1')!,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
     updatedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-    comments: mockComments,
+    comments: mockComments.filter(c => c.postId === 'post1'),
     files: [mockFiles[0]],
     upvotes: 15,
     isResolved: false,
@@ -120,12 +131,24 @@ public class MyService {
     user: mockUsers.find(u => u.id === 'user2')!,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
-    comments: [],
+    comments: mockComments.filter(c => c.postId === 'post2'), // Ensure comments are correctly filtered
     files: [],
     upvotes: 25,
     isResolved: true,
   },
 ];
+
+// Initialize comments for posts correctly
+mockPosts.forEach(post => {
+    post.comments = mockComments
+        .filter(comment => comment.postId === post.id)
+        .map(comment => ({
+            ...comment,
+            user: mockUsers.find(u => u.id === comment.userId)!
+        }));
+    post.user = mockUsers.find(u => u.id === post.userId)!;
+});
+
 
 export function getMockUsers(): UserProfile[] {
   return JSON.parse(JSON.stringify(mockUsers));
@@ -164,13 +187,13 @@ export function getMockPostById(id: string): Post | undefined {
   }));
 }
 
-export function addMockPost(post: Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 'user' | 'comments' | 'upvotes' | 'isResolved'>, userId: string): Post {
+export function addMockPost(post: Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 'user' | 'comments' | 'upvotes' | 'isResolved' | 'userId'>, userId: string): Post {
     const user = getMockUserById(userId);
     if (!user) throw new Error("User not found");
 
     const newPost: Post = {
         ...post,
-        id: `post${mockPosts.length + 1}`,
+        id: `post${mockPosts.length + 1 + Date.now()}`, // Make ID more unique
         userId,
         user,
         createdAt: new Date().toISOString(),
@@ -180,24 +203,24 @@ export function addMockPost(post: Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 
         upvotes: 0,
         isResolved: false,
     };
-    mockPosts.push(newPost);
+    mockPosts.push(newPost); // Add to the main array
     return JSON.parse(JSON.stringify(newPost));
 }
 
 export function addMockComment(postId: string, comment: Omit<Comment, 'id' | 'postId' | 'createdAt' | 'user'>, userId: string): Comment {
-    const post = mockPosts.find(p => p.id === postId);
-    const user = getMockUserById(userId);
+    const postIndex = mockPosts.findIndex(p => p.id === postId);
+    const user = mockUsers.find(u => u.id === userId);
 
-    if (!post || !user) throw new Error("Post or User not found");
+    if (postIndex === -1 || !user) throw new Error("Post or User not found");
 
     const newComment: Comment = {
         ...comment,
-        id: `comment${post.comments.length + Date.now()}`,
+        id: `comment${mockPosts[postIndex].comments.length + Date.now()}`, // Make ID more unique
         postId,
         userId,
         user,
         createdAt: new Date().toISOString(),
     };
-    post.comments.push(newComment);
+    mockPosts[postIndex].comments.push(newComment); // Add to the comments array of the specific post
     return JSON.parse(JSON.stringify(newComment));
 }
