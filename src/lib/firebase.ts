@@ -1,25 +1,34 @@
 
 // Import the functions you need from the SDKs you need
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { getFirestore, type Firestore } from "firebase/firestore";
+import { getAnalytics, type Analytics } from "firebase/analytics";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+  apiKey: "AIzaSyCx6Y2gaRYTl_5eJAIMtxX96vhW-1Ok1Pw",
+  authDomain: "kartzora-1744495566759.firebaseapp.com",
+  projectId: "kartzora-1744495566759",
+  storageBucket: "kartzora-1744495566759.appspot.com", // Corrected from .firebasestorage.app to .appspot.com based on typical Firebase config
+  messagingSenderId: "516940048595",
+  appId: "1:516940048595:web:e4f0c6ce969ae6dada4c26",
+  measurementId: "G-PVMHRC9CF8"
 };
 
 // Initialize Firebase
 // To prevent reinitialization on hot reloads, check if an app already exists.
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(app);
+const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const db: Firestore = getFirestore(app);
+let analytics: Analytics | undefined;
 
-export { app, db
+// Initialize Firebase Analytics only on the client side
+if (typeof window !== 'undefined') {
+  if (firebaseConfig.measurementId) { // Check if measurementId is provided
+    analytics = getAnalytics(app);
+  }
+}
+
+export { app, db, analytics };
