@@ -3,43 +3,57 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Activity, Wrench, Wand2, SearchX, ArrowRight, FilePenLine, MessageSquareText, LogIn, ChevronRight, ExternalLink } from "lucide-react";
+import { Briefcase, Activity, ArrowRight, FilePenLine, MessageSquareText, LogIn, ChevronRight, ExternalLink, Star, Trophy, Award, Target } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/auth-provider";
 import type { ActivityItem } from "@/types";
 import { formatDistanceToNowStrict } from 'date-fns';
 
-const aiTools = [
-  {
-    title: "Bug Fixing Tool",
-    description: "Automatically analyze your code, identify bugs, and get suggestions for fixes.",
-    icon: <Wrench className="h-8 w-8 mb-3 text-primary" />,
-    link: "/dashboard/tools/bug-fixer",
-    cta: "Fix Bugs",
-  },
-  {
-    title: "Prompt/Snippet to Code",
-    description: "Convert your ideas or existing code snippets into functional code with AI assistance.",
-    icon: <Wand2 className="h-8 w-8 mb-3 text-primary" />,
-    link: "/dashboard/tools/code-generator",
-    cta: "Generate Code",
-  },
-  {
-    title: "Error Describer & Solution",
-    description: "Understand complex error messages and receive clear explanations and potential solutions.",
-    icon: <SearchX className="h-8 w-8 mb-3 text-primary" />,
-    link: "/dashboard/tools/error-explainer",
-    cta: "Explain Error",
-  },
-];
+const getContributionStats = (activities: ActivityItem[] = []) => {
+  const forumPosts = activities.filter(a => a.type === 'forum_post').length;
+  const forumComments = activities.filter(a => a.type === 'forum_comment').length;
+  const aiToolUsage = activities.filter(a => a.type.includes('ai_tool')).length;
+  
+  const totalPoints = forumPosts * 50 + forumComments * 25 + aiToolUsage * 10;
+  
+  return [
+    {
+      title: "Forum Posts",
+      description: "Your published posts and questions in the community.",
+      icon: <FilePenLine className="h-8 w-8 mb-3 text-primary" />,
+      points: forumPosts * 50,
+      count: forumPosts,
+      link: "/forum",
+      cta: "View Posts",
+    },
+    {
+      title: "Helpful Comments",
+      description: "Your responses and solutions to other developers.",
+      icon: <MessageSquareText className="h-8 w-8 mb-3 text-blue-500" />,
+      points: forumComments * 25,
+      count: forumComments,
+      link: "/forum",
+      cta: "View Comments",
+    },
+    {
+      title: "AI Tool Usage",
+      description: "Your usage of AI-powered development tools.",
+      icon: <Star className="h-8 w-8 mb-3 text-yellow-500" />,
+      points: aiToolUsage * 10,
+      count: aiToolUsage,
+      link: "/ai-tools",
+      cta: "Use AI Tools",
+    },
+  ];
+};
 
 const getActivityIcon = (type: ActivityItem['type']) => {
   switch (type) {
     case 'forum_post': return <FilePenLine className="h-5 w-5 text-primary flex-shrink-0" />;
     case 'forum_comment': return <MessageSquareText className="h-5 w-5 text-blue-500 flex-shrink-0" />;
-    case 'ai_tool_bug_fixer': return <Wrench className="h-5 w-5 text-orange-500 flex-shrink-0" />;
-    case 'ai_tool_code_generator': return <Wand2 className="h-5 w-5 text-purple-500 flex-shrink-0" />;
-    case 'ai_tool_error_explainer': return <SearchX className="h-5 w-5 text-red-500 flex-shrink-0" />;
+    case 'ai_tool_bug_fixer': return <Trophy className="h-5 w-5 text-orange-500 flex-shrink-0" />;
+    case 'ai_tool_code_generator': return <Star className="h-5 w-5 text-purple-500 flex-shrink-0" />;
+    case 'ai_tool_error_explainer': return <Award className="h-5 w-5 text-red-500 flex-shrink-0" />;
     case 'login': return <LogIn className="h-5 w-5 text-green-500 flex-shrink-0" />;
     default: return <Activity className="h-5 w-5 text-muted-foreground flex-shrink-0" />;
   }
@@ -51,6 +65,8 @@ export default function DashboardPage() {
   const recentActivities = currentUser?.recentActivities
     ?.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
     .slice(0, 5) || [];
+
+  const userContributions = getContributionStats(currentUser?.recentActivities || []);
 
   return (
     <div className="container mx-auto py-8 space-y-10">
@@ -119,23 +135,33 @@ export default function DashboardPage() {
 
       <section>
         <h2 className="text-2xl font-semibold mb-6 flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 h-7 w-7 text-primary"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
-          AI Developer Tools
+          <Target className="mr-3 h-7 w-7 text-primary" />
+          Community Contributions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {aiTools.map((tool) => (
-            <Card key={tool.title} className="shadow-lg hover:shadow-xl transition-shadow flex flex-col">
+          {userContributions.map((contribution) => (
+            <Card key={contribution.title} className="shadow-lg hover:shadow-xl transition-shadow flex flex-col">
               <CardHeader className="items-center text-center">
-                {tool.icon}
-                <CardTitle className="text-xl">{tool.title}</CardTitle>
+                {contribution.icon}
+                <CardTitle className="text-xl">{contribution.title}</CardTitle>
               </CardHeader>
               <CardContent className="flex-grow">
-                <p className="text-muted-foreground text-sm text-center">{tool.description}</p>
+                <p className="text-muted-foreground text-sm text-center mb-4">{contribution.description}</p>
+                <div className="flex justify-between items-center text-sm">
+                  <div className="flex items-center gap-1">
+                    <Star className="h-4 w-4 text-yellow-500" />
+                    <span className="font-medium">{contribution.points} points</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MessageSquareText className="h-4 w-4 text-blue-500" />
+                    <span className="font-medium">{contribution.count} {contribution.title.toLowerCase().includes('posts') ? 'posts' : contribution.title.toLowerCase().includes('comments') ? 'comments' : 'uses'}</span>
+                  </div>
+                </div>
               </CardContent>
               <CardFooter>
                 <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                  <Link href={tool.link}>
-                    {tool.cta} <ArrowRight className="ml-2 h-4 w-4" />
+                  <Link href={contribution.link}>
+                    {contribution.cta} <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
               </CardFooter>

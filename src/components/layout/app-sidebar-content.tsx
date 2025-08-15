@@ -27,7 +27,8 @@ import {
   LogOut,
   Briefcase, 
   AreaChart,
-  Group, 
+  Group,
+  Bot,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -49,6 +50,7 @@ const mainNavGroups: NavGroup[] = [
     items: [
       { href: '/forum', label: 'Forum', icon: Home, matchStartsWith: true },
       { href: '/dashboard', label: 'Dashboard', icon: Briefcase },
+      { href: '/ai-tools', label: 'AI Developer Tools', icon: Bot },
       { href: '/analytics', label: 'Analytics', icon: AreaChart },
       { href: '/collaboration', label: 'Team & Collaboration', icon: Group }, 
     ],
