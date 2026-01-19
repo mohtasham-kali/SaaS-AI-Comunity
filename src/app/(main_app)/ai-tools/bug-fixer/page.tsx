@@ -27,61 +27,33 @@ export default function BugFixerPage() {
     }
 
     setIsLoading(true);
-    
-    // Simulate AI processing
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // Mock bug fixing based on input
-    const mockFixedCode = `# Bug Analysis & Fix
 
-## Issues Found:
-${buggyCode.includes('console.log') ? '- Console.log statements in production code' : '- Potential runtime errors'}
-${buggyCode.includes('undefined') ? '- Undefined variable access' : '- Missing error handling'}
-${buggyCode.includes('function') ? '- Function scope issues' : '- Inefficient code patterns'}
+    try {
+      const { debugCode } = await import('@/ai/flows/debug-code');
+      const result = await debugCode({
+        problemDescription: "Please fix the bugs in the provided code snippet.",
+        codeSnippet: buggyCode,
+        language: "javascript",
+      });
 
-## Fixed Code:
-\`\`\`javascript
-// Original problematic code:
-${buggyCode}
+      const formattedFix = `# Bug Analysis & Fix\n\n## Explanation:\n${result.explanation}\n\n## Suggestions:\n${result.suggestions}\n\n## Fixed Code:\n${result.debuggedCode}\n\n---\n*Generated fix for your code*`;
 
-// Fixed version:
-${buggyCode.includes('console.log') ? buggyCode.replace(/console\.log/g, '// console.log') : buggyCode.includes('undefined') ? buggyCode.replace(/\.(\w+)/g, '?.$1') : buggyCode.replace(/function/g, 'const')}
+      setFixedCode(formattedFix);
 
-// Additional improvements:
-${buggyCode.includes('var ') ? '// Use const/let instead of var for better scoping' : '// Added proper error handling'}
-${buggyCode.includes('==') ? '// Use === for strict equality checks' : '// Improved code readability'}
-
-## What Was Fixed:
-1. **Error Prevention**: Added null checks and proper error handling
-2. **Code Quality**: Improved variable declarations and function syntax
-3. **Performance**: Optimized loops and data structures
-4. **Security**: Removed potential security vulnerabilities
-5. **Maintainability**: Added comments and improved code structure
-
-## Best Practices Applied:
-- Use const/let instead of var
-- Implement proper error handling with try-catch
-- Add input validation
-- Use modern JavaScript features (optional chaining, nullish coalescing)
-- Follow consistent naming conventions
-- Add meaningful comments
-
-## Testing Recommendations:
-1. Test with edge cases (null, undefined, empty values)
-2. Verify error handling works as expected
-3. Check performance with large datasets
-4. Ensure backward compatibility if needed
-
----
-*Generated fix for your code*`;
-
-    setFixedCode(mockFixedCode);
-    setIsLoading(false);
-    
-    toast({
-      title: "Bugs Fixed",
-      description: "Your code has been analyzed and fixed successfully.",
-    });
+      toast({
+        title: "Bugs Fixed",
+        description: "Your code has been analyzed and fixed successfully.",
+      });
+    } catch (error) {
+      console.error("Error fixing bugs:", error);
+      toast({
+        title: "Fix Failed",
+        description: "An error occurred while fixing the bugs. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const copyToClipboard = () => {
@@ -105,15 +77,15 @@ ${buggyCode.includes('==') ? '// Use === for strict equality checks' : '// Impro
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={() => router.back()}
           className="mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to AI Tools
         </Button>
-        
+
         <div className="flex items-center gap-3 mb-4">
           <Bug className="h-8 w-8 text-purple-500" />
           <h1 className="text-3xl font-bold">Bug Fixer</h1>
@@ -145,7 +117,7 @@ ${buggyCode.includes('==') ? '// Use === for strict equality checks' : '// Impro
               />
             </div>
 
-            <Button 
+            <Button
               onClick={fixBugs}
               disabled={!buggyCode.trim() || isLoading}
               className="w-full"
@@ -191,7 +163,7 @@ ${buggyCode.includes('==') ? '// Use === for strict equality checks' : '// Impro
               <div className="text-center py-12 text-muted-foreground">
                 <CheckCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                 <p>Fixed code will appear here</p>
-                <p className="text-sm">Paste your code and click "Fix Bugs" to get started</p>
+                <p className="text-sm">Paste your code and click &quot;Fix Bugs&quot; to get started</p>
               </div>
             )}
           </CardContent>

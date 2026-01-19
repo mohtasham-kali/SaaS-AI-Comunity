@@ -28,10 +28,10 @@ export function PostCard({ post }: PostCardProps) {
         </CardTitle>
         <div className="flex items-center space-x-2 text-xs text-muted-foreground">
           <Avatar className="h-6 w-6">
-            <AvatarImage src={post.user.image || undefined} alt={post.user.name || 'User avatar'} data-ai-hint="author avatar"/>
-            <AvatarFallback className="text-xs">{getInitials(post.user.name)}</AvatarFallback>
+            <AvatarImage src={post.user.avatar_url || undefined} alt={post.user.username || 'User avatar'} data-ai-hint="author avatar" />
+            <AvatarFallback className="text-xs">{getInitials(post.user.username)}</AvatarFallback>
           </Avatar>
-          <span>{post.user.name}</span>
+          <span>{post.user.username}</span>
           <span>&bull;</span>
           <span>{formatDistanceToNowStrict(new Date(post.createdAt), { addSuffix: true })}</span>
         </div>
@@ -66,7 +66,7 @@ export function PostCard({ post }: PostCardProps) {
               Resolved
             </Badge>
           )}
-           <Button variant="outline" size="sm" asChild className="border-primary/50 text-primary hover:bg-primary/10 hover:text-primary">
+          <Button variant="outline" size="sm" asChild className="border-primary/50 text-primary hover:bg-primary/10 hover:text-primary">
             <Link href={`/posts/${post.id}`}>View Post</Link>
           </Button>
         </div>

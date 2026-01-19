@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useAuth } from '@/components/auth/auth-provider';
+import { useSupabaseAuth } from '@/components/auth/supabase-auth-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,17 +16,17 @@ import { useToast } from '@/hooks/use-toast';
 import type { Plan } from '@/types';
 
 export default function ProfilePage() {
-  const { currentUser, loading, logout } = useAuth();
+  const { user, profile, loading, signOut } = useSupabaseAuth();
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (currentUser?.name) {
-      document.title = `${currentUser.name} - CodeAssist Profile`;
+    if (profile?.username) {
+      document.title = `${profile.username} - CodeAssist Profile`;
     } else if (!loading) {
       document.title = 'User Profile - CodeAssist';
     }
-  }, [currentUser, loading]);
+  }, [profile, loading]);
 
   const getInitials = (name?: string | null) => {
     if (!name) return '??';
@@ -34,7 +34,7 @@ export default function ProfilePage() {
     return names.length > 1 ? names[0][0].toUpperCase() + names[names.length - 1][0].toUpperCase() : name.substring(0, 2).toUpperCase();
   };
 
-  if (loading || !currentUser) { 
+  if (loading || !user || !profile) {
     return (
         <div className="w-full max-w-2xl mx-auto">
             <Card className="shadow-xl">
@@ -86,18 +86,18 @@ export default function ProfilePage() {
     Standard: { dailyLimit: 50, weeklyLimit: 200, badgeVariant: 'default' as const, icon: Star },
     Community: { dailyLimit: Infinity, weeklyLimit: Infinity, badgeVariant: 'default' as const, icon: Gem, badgeClass: 'bg-purple-600 hover:bg-purple-700 text-white' }
   };
-  const currentPlanConfig = planConfig[currentUser.plan];
+  const currentPlanConfig = planConfig[profile.plan as Plan];
 
 
   return (
       <Card className="max-w-2xl mx-auto shadow-2xl overflow-hidden">
         <CardHeader className="items-center text-center p-8 bg-gradient-to-br from-muted/50 to-muted/20">
           <Avatar className="h-28 w-28 mb-4 border-4 border-primary shadow-lg">
-            <AvatarImage src={currentUser.image || undefined} alt={currentUser.name || 'User avatar'} data-ai-hint="modern avatar" />
-            <AvatarFallback className="text-4xl font-semibold">{getInitials(currentUser.name)}</AvatarFallback>
+            <AvatarImage src={profile.avatar_url || undefined} alt={profile.username || 'User avatar'} data-ai-hint="modern avatar" />
+            <AvatarFallback className="text-4xl font-semibold">{getInitials(profile.username)}</AvatarFallback>
           </Avatar>
-          <CardTitle className="text-3xl font-bold">{currentUser.name}</CardTitle>
-          {currentUser.email && <CardDescription className="text-lg text-muted-foreground flex items-center"><Mail className="h-5 w-5 mr-2 text-primary"/>{currentUser.email}</CardDescription>}
+          <CardTitle className="text-3xl font-bold">{profile.username}</CardTitle>
+          {profile.email && <CardDescription className="text-lg text-muted-foreground flex items-center"><Mail className="h-5 w-5 mr-2 text-primary"/>{profile.email}</CardDescription>}
         </CardHeader>
         <CardContent className="p-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -105,8 +105,8 @@ export default function ProfilePage() {
               <currentPlanConfig.icon className="h-8 w-8 text-primary flex-shrink-0" />
               <div>
                 <p className="text-sm text-muted-foreground">Current Plan</p>
-                <Badge variant={currentPlanConfig.badgeVariant} className={`capitalize text-base px-3 py-1 ${currentPlanConfig.badgeClass || (currentUser.plan !== 'free' ? 'bg-primary text-primary-foreground' : '')}`}>
-                  {currentUser.plan}
+                <Badge variant={currentPlanConfig.badgeVariant} className={`capitalize text-base px-3 py-1 ${currentPlanConfig.badgeClass || (profile.plan !== 'free' ? 'bg-primary text-primary-foreground' : '')}`}>
+                  {profile.plan}
                 </Badge>
               </div>
             </div>
@@ -115,7 +115,7 @@ export default function ProfilePage() {
               <CalendarDays className="h-8 w-8 text-primary flex-shrink-0" />
               <div>
                 <p className="text-sm text-muted-foreground">Last Login</p>
-                <p className="text-base font-medium">{format(new Date(currentUser.lastLogin), "MMMM d, yyyy 'at' h:mm a")}</p>
+                <p className="text-base font-medium">{format(new Date(profile.lastlogin), "MMMM d, yyyy 'at' h:mm a")}</p>
               </div>
             </div>
           </div>
@@ -128,34 +128,34 @@ export default function ProfilePage() {
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
                 <div className="p-4 border rounded-md bg-muted/30">
                     <p className="text-muted-foreground mb-1">AI Responses Today:</p>
-                    <p className="font-semibold text-2xl">{currentUser.aiResponsesToday} / <span className="text-base">{currentPlanConfig.dailyLimit === Infinity ? 'Unlimited' : currentPlanConfig.dailyLimit}</span></p>
+                    <p className="font-semibold text-2xl">{profile.airesponsestoday} / <span className="text-base">{currentPlanConfig.dailyLimit === Infinity ? 'Unlimited' : currentPlanConfig.dailyLimit}</span></p>
                 </div>
                 <div className="p-4 border rounded-md bg-muted/30">
                     <p className="text-muted-foreground mb-1">AI Responses This Week:</p>
-                    <p className="font-semibold text-2xl">{currentUser.aiResponsesThisWeek} / <span className="text-base">{currentPlanConfig.weeklyLimit === Infinity ? 'Unlimited' : currentPlanConfig.weeklyLimit}</span></p>
+                    <p className="font-semibold text-2xl">{profile.airesponsesthisweek} / <span className="text-base">{currentPlanConfig.weeklyLimit === Infinity ? 'Unlimited' : currentPlanConfig.weeklyLimit}</span></p>
                 </div>
             </CardContent>
           </Card>
 
-          {currentUser.plan !== 'Community' && (
+          {profile.plan !== 'Community' && (
             <Button size="lg" className="w-full bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 text-primary-foreground shadow-lg text-base py-6" asChild>
-              <Link href="/profile/subscriptions"> 
-                <Zap className="mr-2 h-5 w-5" /> 
-                {currentUser.plan === 'free' ? 'Upgrade to Standard or Community' : 'Upgrade to Community'}
+              <Link href="/profile/subscriptions">
+                <Zap className="mr-2 h-5 w-5" />
+                {profile.plan === 'free' ? 'Upgrade to Standard or Community' : 'Upgrade to Community'}
               </Link>
             </Button>
           )}
-           {currentUser.plan === 'Community' && (
+           {profile.plan === 'Community' && (
              <Button size="lg" className="w-full text-primary-foreground shadow-lg text-base py-6 bg-purple-600 hover:bg-purple-700" asChild>
-               <Link href="/profile/subscriptions"> 
+               <Link href="/profile/subscriptions">
                  <Gem className="mr-2 h-5 w-5" /> Manage Subscription
                </Link>
              </Button>
            )}
-          
+
           <div className="flex flex-col sm:flex-row gap-4 mt-8 pt-6 border-t">
             <Button variant="outline" className="w-full sm:w-auto text-base py-3" onClick={() => { toast({title: "Feature Coming Soon!", description: "Editing profiles, changing passwords, and managing notifications will be available shortly."}) }}><Edit3 className="mr-2 h-4 w-4"/>Edit Profile</Button>
-            <Button variant="destructive" className="w-full sm:w-auto text-base py-3" onClick={() => { logout(); router.push('/'); }}><LogOutIcon className="mr-2 h-4 w-4"/>Log Out</Button>
+            <Button variant="destructive" className="w-full sm:w-auto text-base py-3" onClick={() => { signOut(); router.push('/'); }}><LogOutIcon className="mr-2 h-4 w-4"/>Log Out</Button>
           </div>
         </CardContent>
       </Card>

@@ -4,13 +4,14 @@ import type { UserProfile, Post, Comment, UploadedFile, ActivityItem, Plan } fro
 const mockUsers: UserProfile[] = [
   {
     id: 'user1',
-    name: 'Alice Coder',
+    username: 'Alice Coder',
     email: 'alice@example.com',
-    image: 'https://picsum.photos/seed/alice/200/200',
+    avatar_url: 'https://picsum.photos/seed/alice/200/200',
     plan: 'Standard', // Updated plan
-    aiResponsesToday: 15, // Example usage for Standard
-    aiResponsesThisWeek: 50, // Example usage for Standard
-    lastLogin: new Date().toISOString(),
+    airesponsestoday: 15, // Example usage for Standard
+    airesponsesthisweek: 50, // Example usage for Standard
+    lastlogin: new Date().toISOString(),
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString(),
     recentActivities: [
       { id: 'act1', type: 'forum_post', description: "Posted 'NullPointerException in Java Spring Boot App'", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), link: '/posts/post1' },
       { id: 'act2', type: 'ai_tool_bug_fixer', description: "Used Bug Fixer for 'Java Spring Boot NPE'", timestamp: new Date(Date.now() - 1000 * 60 * 90).toISOString(), link: '/dashboard/tools/bug-fixer' },
@@ -20,50 +21,53 @@ const mockUsers: UserProfile[] = [
   },
   {
     id: 'user2',
-    name: 'Bob Debugger',
+    username: 'Bob Debugger',
     email: 'bob@example.com',
-    image: 'https://picsum.photos/seed/bob/200/200',
+    avatar_url: 'https://picsum.photos/seed/bob/200/200',
     plan: 'free', // Stays free
-    aiResponsesToday: 1,
-    aiResponsesThisWeek: 3,
-    lastLogin: new Date().toISOString(),
+    airesponsestoday: 1,
+    airesponsesthisweek: 3,
+    lastlogin: new Date().toISOString(),
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60).toISOString(),
     recentActivities: [
       { id: 'act4', type: 'forum_comment', description: "Commented on 'NullPointerException in Java'", timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(), link: '/posts/post1' },
-      { id: 'act5', type: 'ai_tool_error_explainer', description: "Used Error Explainer for 'CSS Flexbox issue'", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString(), link: '/dashboard/tools/error-explainer'},
+      { id: 'act5', type: 'ai_tool_error_explainer', description: "Used Error Explainer for 'CSS Flexbox issue'", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString(), link: '/dashboard/tools/error-explainer' },
       { id: 'act6', type: 'login', description: "Logged in successfully", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString() },
     ],
   },
   {
     id: 'user3',
-    name: 'AI Assistant',
+    username: 'AI Assistant',
     email: 'ai@example.com',
-    image: 'https://picsum.photos/seed/ai/200/200',
+    avatar_url: 'https://picsum.photos/seed/ai/200/200',
     plan: 'Community', // AI can be on Community
-    aiResponsesToday: 0, // AI doesn't consume its own limits
-    aiResponsesThisWeek: 0,
-    lastLogin: new Date().toISOString(),
+    airesponsestoday: 0, // AI doesn't consume its own limits
+    airesponsesthisweek: 0,
+    lastlogin: new Date().toISOString(),
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 365).toISOString(),
     recentActivities: [],
   },
   {
     id: 'user4',
-    name: 'Mohtasham Siddiqui',
+    username: 'Mohtasham Siddiqui',
     email: 'mohtasham.siddiqui17@gmail.com',
-    image: 'https://picsum.photos/seed/mohtasham/200/200',
+    avatar_url: 'https://picsum.photos/seed/mohtasham/200/200',
     plan: 'Community', // Updated plan
-    aiResponsesToday: 10, // Example usage for Community (though unlimited)
-    aiResponsesThisWeek: 50, // Example usage for Community (though unlimited)
-    lastLogin: new Date().toISOString(),
+    airesponsestoday: 10, // Example usage for Community (though unlimited)
+    airesponsesthisweek: 50, // Example usage for Community (though unlimited)
+    lastlogin: new Date().toISOString(),
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(),
     recentActivities: [
       { id: 'act7', type: 'login', description: "Logged in", timestamp: new Date(Date.now() - 1000 * 60 * 10).toISOString() },
-      { id: 'act8', type: 'ai_tool_code_generator', description: "Used Code Generator for 'React login form'", timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), link: '/dashboard/tools/code-generator'},
+      { id: 'act8', type: 'ai_tool_code_generator', description: "Used Code Generator for 'React login form'", timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), link: '/dashboard/tools/code-generator' },
       { id: 'act10', type: 'forum_post', description: "Asked 'How to setup Tailwind CSS with Next.js 14?'", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), link: '#' }, // Placeholder link
     ],
   },
 ];
 
 const mockFiles: UploadedFile[] = [
-    { id: 'file1', name: 'screenshot.png', url: 'https://placehold.co/600x400.png', type: 'image/png', size: 1024 * 500, data_ai_hint: 'screenshot error' },
-    { id: 'file2', name: 'error_log.txt', url: '#', type: 'text/plain', size: 1024 * 10, data_ai_hint: 'text document' },
+  { id: 'file1', name: 'screenshot.png', url: 'https://placehold.co/600x400.png', type: 'image/png', size: 1024 * 500, data_ai_hint: 'screenshot error' },
+  { id: 'file2', name: 'error_log.txt', url: '#', type: 'text/plain', size: 1024 * 10, data_ai_hint: 'text document' },
 ];
 
 const mockComments: Comment[] = [
@@ -87,13 +91,13 @@ const mockComments: Comment[] = [
     createdAt: new Date(Date.now() - 1000 * 60 * 2).toISOString(), // 2 minutes ago
     isAI: true,
   },
-   {
+  {
     id: 'comment3',
     postId: 'post2',
-    userId: 'user1', 
+    userId: 'user1',
     user: mockUsers.find(u => u.id === 'user1')!,
     content: "To center with Flexbox, you typically need `justify-content: center;` and `align-items: center;` on the parent. Make sure the parent has a defined height if you're centering vertically within it.",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), 
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
     isAI: false,
   },
 ];
@@ -167,13 +171,13 @@ public class MyService {
 
 // Initialize comments for posts correctly
 mockPosts.forEach(post => {
-    post.comments = mockComments
-        .filter(comment => comment.postId === post.id)
-        .map(comment => ({
-            ...comment,
-            user: mockUsers.find(u => u.id === comment.userId)!
-        }));
-    post.user = mockUsers.find(u => u.id === post.userId)!;
+  post.comments = mockComments
+    .filter(comment => comment.postId === post.id)
+    .map(comment => ({
+      ...comment,
+      user: mockUsers.find(u => u.id === comment.userId)!
+    }));
+  post.user = mockUsers.find(u => u.id === post.userId)!;
 });
 
 
@@ -194,8 +198,8 @@ export function getMockPosts(): Post[] {
     ...post,
     user: mockUsers.find(u => u.id === post.userId)!,
     comments: post.comments.map(comment => ({
-        ...comment,
-        user: mockUsers.find(u => u.id === comment.userId)!
+      ...comment,
+      user: mockUsers.find(u => u.id === comment.userId)!
     }))
   }))));
 }
@@ -207,48 +211,49 @@ export function getMockPostById(id: string): Post | undefined {
     ...post,
     user: mockUsers.find(u => u.id === post.userId)!,
     comments: post.comments.map(comment => ({
-        ...comment,
-        user: mockUsers.find(u => u.id === comment.userId)!
+      ...comment,
+      user: mockUsers.find(u => u.id === comment.userId)!
     }))
   }));
 }
 
-export function addMockPost(post: Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 'user' | 'comments' | 'upvotes' | 'isResolved' | 'userId'>, userId: string): Post {
-    const user = getMockUserById(userId);
-    if (!user) throw new Error("User not found");
+export function addMockPost(post: Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 'user' | 'comments' | 'upvotes' | 'isResolved' | 'userId'>, user: UserProfile): Post {
+  // If user is not in mockUsers, we can optionally add them, or just use the passed user object.
+  // For consistency in this session, let's ensure they are in mockUsers if we want getMockUserById to work later?
+  // But getMockUserById is static.
+  // Let's just use the passed user object for the post.
 
-    const newPost: Post = {
-        ...post,
-        id: `post${mockPosts.length + 1 + Date.now()}`, // Make ID more unique
-        userId,
-        user,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        comments: [],
-        files: post.files || [],
-        upvotes: 0,
-        isResolved: false,
-    };
-    mockPosts.unshift(newPost); // Add to the beginning of the array
-    return JSON.parse(JSON.stringify(newPost));
+  const newPost: Post = {
+    ...post,
+    id: `post${mockPosts.length + 1 + Date.now()}`, // Make ID more unique
+    userId: user.id,
+    user: user,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    comments: [],
+    files: post.files || [],
+    upvotes: 0,
+    isResolved: false,
+  };
+  mockPosts.unshift(newPost); // Add to the beginning of the array
+  return JSON.parse(JSON.stringify(newPost));
 }
 
-export function addMockComment(postId: string, comment: Omit<Comment, 'id' | 'postId' | 'createdAt' | 'user'>, userId: string): Comment {
-    const postIndex = mockPosts.findIndex(p => p.id === postId);
-    const user = mockUsers.find(u => u.id === userId);
+export function addMockComment(postId: string, comment: Omit<Comment, 'id' | 'postId' | 'createdAt' | 'user'>, user: UserProfile): Comment {
+  const postIndex = mockPosts.findIndex(p => p.id === postId);
 
-    if (postIndex === -1 || !user) throw new Error("Post or User not found");
+  if (postIndex === -1) throw new Error("Post not found");
 
-    const newComment: Comment = {
-        ...comment,
-        id: `comment${mockPosts[postIndex].comments.length + Date.now()}`, // Make ID more unique
-        postId,
-        userId,
-        user,
-        createdAt: new Date().toISOString(),
-    };
-    mockPosts[postIndex].comments.push(newComment); // Add to the comments array of the specific post
-    return JSON.parse(JSON.stringify(newComment));
+  const newComment: Comment = {
+    ...comment,
+    id: `comment${mockPosts[postIndex].comments.length + Date.now()}`, // Make ID more unique
+    postId,
+    userId: user.id,
+    user: user,
+    createdAt: new Date().toISOString(),
+  };
+  mockPosts[postIndex].comments.push(newComment); // Add to the comments array of the specific post
+  return JSON.parse(JSON.stringify(newComment));
 }
 
 // Function to update a user's plan (mock)

@@ -35,7 +35,7 @@ export default function ErrorExplainerPage() {
   const [language, setLanguage] = useState('');
   const [rawFiles, setRawFiles] = useState<File[]>([]);
   const [filePreviews, setFilePreviews] = useState<UploadedFile[]>([]);
-  
+
   const [aiResponse, setAiResponse] = useState<DebugCodeOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,30 +51,30 @@ export default function ErrorExplainerPage() {
   const currentFileUploadLimits = fileUploadLimitsByPlan[currentUser?.plan || 'free'];
 
   const handleFilesSelectedForPreview = (newFilePreviews: UploadedFile[]) => {
-     setFilePreviews(prev => {
-        const combined = [...prev, ...newFilePreviews];
-        if (combined.length > currentFileUploadLimits.maxFiles) {
-            toast({
-                title: "File Limit Exceeded",
-                description: `You can upload a maximum of ${currentFileUploadLimits.maxFiles} files. ${combined.length - currentFileUploadLimits.maxFiles} files were not added.`,
-                variant: "destructive",
-            });
-            return combined.slice(0, currentFileUploadLimits.maxFiles);
-        }
-        return combined;
+    setFilePreviews(prev => {
+      const combined = [...prev, ...newFilePreviews];
+      if (combined.length > currentFileUploadLimits.maxFiles) {
+        toast({
+          title: "File Limit Exceeded",
+          description: `You can upload a maximum of ${currentFileUploadLimits.maxFiles} files. ${combined.length - currentFileUploadLimits.maxFiles} files were not added.`,
+          variant: "destructive",
+        });
+        return combined.slice(0, currentFileUploadLimits.maxFiles);
+      }
+      return combined;
     });
   };
 
   const handleRawFilesSelected = (newRawFiles: File[]) => {
     setRawFiles(prev => {
-        const combined = [...prev, ...newRawFiles];
-         if (combined.length > currentFileUploadLimits.maxFiles) {
-            return combined.slice(0, currentFileUploadLimits.maxFiles);
-        }
-        return combined;
+      const combined = [...prev, ...newRawFiles];
+      if (combined.length > currentFileUploadLimits.maxFiles) {
+        return combined.slice(0, currentFileUploadLimits.maxFiles);
+      }
+      return combined;
     });
   };
-  
+
   const removeFile = (fileIdToRemove: string, fileNameToRemove: string) => {
     setFilePreviews(prev => prev.filter(f => f.id !== fileIdToRemove));
     setRawFiles(prev => prev.filter(f => f.name !== fileNameToRemove));
@@ -96,17 +96,17 @@ export default function ErrorExplainerPage() {
       toast({ title: "Authentication Error", description: "You must be logged in.", variant: "destructive" });
       return;
     }
-    
+
     const limits = planAiLimits[currentUser.plan];
     let toastDescription = "";
     let limitReached = false;
 
     if (currentUser.plan === 'free' && (currentUser.aiResponsesToday >= limits.daily || currentUser.aiResponsesThisWeek >= limits.weekly)) {
-        limitReached = true;
-        toastDescription = `Free plan AI response limit reached. Today: ${currentUser.aiResponsesToday}/${limits.daily}, Week: ${currentUser.aiResponsesThisWeek}/${limits.weekly}. Upgrade for more.`;
+      limitReached = true;
+      toastDescription = `Free plan AI response limit reached. Today: ${currentUser.aiResponsesToday}/${limits.daily}, Week: ${currentUser.aiResponsesThisWeek}/${limits.weekly}. Upgrade for more.`;
     } else if (currentUser.plan === 'Standard' && (currentUser.aiResponsesToday >= limits.daily || currentUser.aiResponsesThisWeek >= limits.weekly)) {
-        limitReached = true;
-        toastDescription = `Standard plan AI response limit reached. Today: ${currentUser.aiResponsesToday}/${limits.daily}, Week: ${currentUser.aiResponsesThisWeek}/${limits.weekly}. Upgrade for more.`;
+      limitReached = true;
+      toastDescription = `Standard plan AI response limit reached. Today: ${currentUser.aiResponsesToday}/${limits.daily}, Week: ${currentUser.aiResponsesThisWeek}/${limits.weekly}. Upgrade for more.`;
     }
 
     if (limitReached) {
@@ -134,13 +134,12 @@ export default function ErrorExplainerPage() {
 
       const response = await debugCode(input);
       setAiResponse(response);
-      
+
       currentUser.aiResponsesToday = (currentUser.aiResponsesToday || 0) + 1;
       currentUser.aiResponsesThisWeek = (currentUser.aiResponsesThisWeek || 0) + 1;
       toast({ title: "Analysis Complete!", description: "AI has provided an explanation and suggestions." });
 
-    } catch (err)
-       {
+    } catch (err) {
       console.error("Error explanation tool error:", err);
       const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
       setError(`Failed to get explanation: ${errorMessage}. Please check your connection and ensure the AI service is available (Genkit server might need to be running).`);
@@ -159,7 +158,7 @@ export default function ErrorExplainerPage() {
             AI Error Explainer & Solution Provider
           </CardTitle>
           <CardDescription>
-            Describe the error message or problem you're facing. Upload screenshots or log files for more accurate AI analysis and solution suggestions.
+            Describe the error message or problem you&apos;re facing. Upload screenshots or log files for more accurate AI analysis and solution suggestions.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -169,7 +168,7 @@ export default function ErrorExplainerPage() {
               id="error-description"
               value={errorDescription}
               onChange={(e) => setErrorDescription(e.target.value)}
-              placeholder="e.g., I'm getting a 'TypeError: Cannot read property 'map' of undefined' in my React component. Attached is a screenshot."
+              placeholder="e.g., I&apos;m getting a &apos;TypeError: Cannot read property &apos;map&apos; of undefined&apos; in my React component. Attached is a screenshot."
               className="min-h-[120px] text-base p-3"
               required
             />
@@ -185,7 +184,7 @@ export default function ErrorExplainerPage() {
               className="min-h-[150px] text-base p-3 font-mono"
             />
           </div>
-          
+
           {codeSnippet.trim() && (
             <div>
               <label htmlFor="language" className="block text-sm font-medium text-foreground mb-1">Language (Optional)</label>
@@ -205,7 +204,7 @@ export default function ErrorExplainerPage() {
               onFilesSelected={handleFilesSelectedForPreview}
               onRawFilesSelected={handleRawFilesSelected}
               currentPlan={currentUser?.plan}
-              accept="image/*,text/*,.log,.json,.xml,application/pdf" 
+              accept="image/*,text/*,.log,.json,.xml,application/pdf"
             />
             {filePreviews.length > 0 && (
               <div className="mt-4 space-y-3">
@@ -213,13 +212,13 @@ export default function ErrorExplainerPage() {
                 <ul className="list-none p-0 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {filePreviews.map(file => (
                     <li key={file.id} className="relative group p-3 border rounded-lg bg-muted/50 shadow-sm flex items-center space-x-3">
-                       {file.type.startsWith('image/') ? (
-                         <NextImage src={file.url} alt={file.name} width={40} height={40} className="rounded object-cover h-10 w-10 border border-border" data-ai-hint="error image" />
-                       ) : (
+                      {file.type.startsWith('image/') ? (
+                        <NextImage src={file.url} alt={file.name} width={40} height={40} className="rounded object-cover h-10 w-10 border border-border" data-ai-hint="error image" />
+                      ) : (
                         <div className="flex items-center justify-center h-10 w-10 bg-muted rounded border border-border">
                           {getFileIcon(file.type)}
                         </div>
-                       )}
+                      )}
                       <div className="flex-1 truncate">
                         <p className="text-sm font-medium truncate" title={file.name}>{file.name}</p>
                         <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
@@ -278,15 +277,15 @@ export default function ErrorExplainerPage() {
               <div>
                 <h3 className="text-xl font-semibold mb-2">Explanation of Error:</h3>
                 <div className="prose prose-sm sm:prose dark:prose-invert max-w-none p-4 border rounded-md bg-muted/30">
-                    <p className="whitespace-pre-line">{aiResponse.explanation}</p>
+                  <p className="whitespace-pre-line">{aiResponse.explanation}</p>
                 </div>
               </div>
             )}
             {aiResponse.suggestions && (
               <div>
                 <h3 className="text-xl font-semibold mb-2">Suggested Solutions:</h3>
-                 <div className="prose prose-sm sm:prose dark:prose-invert max-w-none p-4 border rounded-md bg-muted/30">
-                    <p className="whitespace-pre-line">{aiResponse.suggestions}</p>
+                <div className="prose prose-sm sm:prose dark:prose-invert max-w-none p-4 border rounded-md bg-muted/30">
+                  <p className="whitespace-pre-line">{aiResponse.suggestions}</p>
                 </div>
               </div>
             )}
@@ -296,7 +295,7 @@ export default function ErrorExplainerPage() {
                 <CodeBlock code={aiResponse.debuggedCode} language={language || 'plaintext'} />
               </div>
             )}
-             {aiResponse.debuggedCode && aiResponse.debuggedCode.toLowerCase() === 'n/a' && (
+            {aiResponse.debuggedCode && aiResponse.debuggedCode.toLowerCase() === 'n/a' && (
               <div>
                 <h3 className="text-xl font-semibold mb-2">Relevant Code Snippet:</h3>
                 <p className="text-muted-foreground italic p-4 border rounded-md bg-muted/30">Not applicable or no specific code changes were relevant for the provided details.</p>

@@ -28,7 +28,7 @@ import type { Post, UploadedFile, UserProfile, Plan } from "@/types";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { addMockPost } from "@/lib/mock-data"; // For mock submission
+import { createQuestion } from "@/lib/supabase-database";
 import { Loader2, XCircle, Paperclip, Image as ImageIconLucide } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CodeBlock } from "../shared/code-block";
@@ -45,8 +45,8 @@ const postFormSchema = z.object({
 type PostFormValues = z.infer<typeof postFormSchema>;
 
 interface PostFormProps {
-  currentUser: UserProfile | null; 
-  post?: Post; 
+  currentUser: UserProfile | null;
+  post?: Post;
 }
 
 const popularLanguages = ["javascript", "python", "java", "typescript", "csharp", "cpp", "php", "swift", "go", "ruby", "html", "css", "sql", "bash", "rust", "kotlin", "scala", "perl", "r"];
@@ -81,26 +81,29 @@ export function PostForm({ currentUser, post }: PostFormProps) {
       return;
     }
     setIsLoading(true);
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
 
     try {
-      const newPostData: Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 'user' | 'comments' | 'upvotes' | 'isResolved' | 'userId'> & { files: UploadedFile[] } = {
+      const newQuestionData = {
         title: values.title,
         description: values.description,
-        codeSnippet: values.codeSnippet,
-        language: values.language,
-        tags: values.tags,
-        files: uploadedFiles,
+        code_snippet: values.codeSnippet || null,
+        language: values.language || null,
+        tags: values.tags || [], // Tags are already transformed to array by Zod
       };
-      
-      const createdPost = addMockPost(newPostData, currentUser.id);
 
-      toast({
-        title: post ? "Post Updated" : "Post Created Successfully!",
-        description: "Your post is now live.",
-      });
-      router.push(`/posts/${createdPost.id}`);
+      const createdQuestion = await createQuestion(newQuestionData, currentUser.id);
+
+      if (createdQuestion) {
+        toast({
+          title: post ? "Post Updated" : "Post Created Successfully!",
+          description: "Your post is now live.",
+        });
+        // Redirect to the new post (using ID from DB)
+        // Note: We might need to update the route to handle DB IDs if they are UUIDs vs mock IDs
+        router.push(`/forum`);
+      } else {
+        throw new Error("Failed to create question");
+      }
     } catch (error) {
       console.error("Post submission error:", error);
       toast({
@@ -116,24 +119,24 @@ export function PostForm({ currentUser, post }: PostFormProps) {
   const handleFilesSelected = (newFiles: UploadedFile[]) => {
     const currentFileUploadLimits = fileUploadLimitsByPlan[currentUser?.plan || 'free'];
     const totalFilesAfterAdding = uploadedFiles.length + newFiles.length;
-    
+
     if (totalFilesAfterAdding > currentFileUploadLimits.maxFiles) {
-        toast({
-            title: "File Limit Exceeded",
-            description: `You can upload a maximum of ${currentFileUploadLimits.maxFiles} files. Only some files were added.`,
-            variant: "destructive",
-        });
-        const filesToAdd = newFiles.slice(0, currentFileUploadLimits.maxFiles - uploadedFiles.length);
-        setUploadedFiles(prev => [...prev, ...filesToAdd]);
+      toast({
+        title: "File Limit Exceeded",
+        description: `You can upload a maximum of ${currentFileUploadLimits.maxFiles} files. Only some files were added.`,
+        variant: "destructive",
+      });
+      const filesToAdd = newFiles.slice(0, currentFileUploadLimits.maxFiles - uploadedFiles.length);
+      setUploadedFiles(prev => [...prev, ...filesToAdd]);
     } else {
-        setUploadedFiles(prev => [...prev, ...newFiles]);
+      setUploadedFiles(prev => [...prev, ...newFiles]);
     }
   };
 
   const removeFile = (fileId: string) => {
     setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
   };
-  
+
   const currentFileUploadLimits = fileUploadLimitsByPlan[currentUser?.plan || 'free'];
 
   return (
@@ -152,7 +155,7 @@ export function PostForm({ currentUser, post }: PostFormProps) {
                 <FormItem>
                   <FormLabel className="text-base">Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., How to fix NullPointerException in Java?" {...field} className="text-base p-3"/>
+                    <Input placeholder="e.g., How to fix NullPointerException in Java?" {...field} className="text-base p-3" />
                   </FormControl>
                   <FormDescription>
                     A clear, descriptive title helps others find and understand your issue.
@@ -175,7 +178,7 @@ export function PostForm({ currentUser, post }: PostFormProps) {
                       {...field}
                     />
                   </FormControl>
-                   <FormDescription>
+                  <FormDescription>
                     Provide as much context as possible. Markdown is supported for formatting.
                   </FormDescription>
                   <FormMessage />
@@ -192,45 +195,45 @@ export function PostForm({ currentUser, post }: PostFormProps) {
                   <FormControl>
                     <Textarea
                       placeholder="// Paste relevant code here. Keep it concise."
-                      className="min-h-[200px] font-mono text-sm p-3" 
+                      className="min-h-[200px] font-mono text-sm p-3"
                       {...field}
                     />
                   </FormControl>
-                   <FormDescription>
-                    Share the specific code that's causing the issue. Use a minimal reproducible example.
+                  <FormDescription>
+                    Share the specific code that&apos;s causing the issue. Use a minimal reproducible example.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             {form.watch("codeSnippet") && (
-                 <FormField
-                    control={form.control}
-                    name="language"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel className="text-base">Code Language</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                            <SelectTrigger className="text-base p-3 h-auto">
-                                <SelectValue placeholder="Select language for syntax highlighting" />
-                            </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                            {popularLanguages.sort().map(lang => (
-                                <SelectItem key={lang} value={lang}>{lang.charAt(0).toUpperCase() + lang.slice(1)}</SelectItem>
-                            ))}
-                            <SelectItem value="other">Other / Plain Text</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <FormDescription>
-                            Helps with syntax highlighting and allows AI to better understand your code.
-                        </FormDescription>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                 />
+              <FormField
+                control={form.control}
+                name="language"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base">Code Language</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="text-base p-3 h-auto">
+                          <SelectValue placeholder="Select language for syntax highlighting" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {popularLanguages.sort().map(lang => (
+                          <SelectItem key={lang} value={lang}>{lang.charAt(0).toUpperCase() + lang.slice(1)}</SelectItem>
+                        ))}
+                        <SelectItem value="other">Other / Plain Text</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Helps with syntax highlighting and allows AI to better understand your code.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
 
             <FormField
@@ -240,7 +243,7 @@ export function PostForm({ currentUser, post }: PostFormProps) {
                 <FormItem>
                   <FormLabel className="text-base">Tags (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., javascript, react, bug, api-error" {...field} className="text-base p-3"/>
+                    <Input placeholder="e.g., javascript, react, bug, api-error" {...field} className="text-base p-3" />
                   </FormControl>
                   <FormDescription>
                     Comma-separated tags to categorize your post (e.g., javascript, api, authentication).
@@ -252,7 +255,7 @@ export function PostForm({ currentUser, post }: PostFormProps) {
 
             <FormItem>
               <FormLabel className="text-base">Upload Files (Optional)</FormLabel>
-              <FileUploadButton onFilesSelected={handleFilesSelected} currentPlan={currentUser?.plan}/>
+              <FileUploadButton onFilesSelected={handleFilesSelected} currentPlan={currentUser?.plan} />
               {uploadedFiles.length > 0 && (
                 <div className="mt-4 space-y-3">
                   <p className="text-sm font-medium">Selected files ({uploadedFiles.length} / {currentFileUploadLimits.maxFiles}):</p>
@@ -260,17 +263,17 @@ export function PostForm({ currentUser, post }: PostFormProps) {
                     {uploadedFiles.map(file => (
                       <li key={file.id} className="flex items-center justify-between text-sm p-3 border rounded-lg bg-muted/50 shadow-sm">
                         <div className="flex items-center gap-2 truncate">
-                           {file.type.startsWith('image/') ? (
-                             <Image src={file.url} alt={file.name} width={32} height={32} className="mr-2 rounded object-cover h-8 w-8 border border-border" data-ai-hint="thumbnail image"/>
-                           ) : (
+                          {file.type.startsWith('image/') ? (
+                            <Image src={file.url} alt={file.name} width={32} height={32} className="mr-2 rounded object-cover h-8 w-8 border border-border" data-ai-hint="thumbnail image" />
+                          ) : (
                             <Paperclip className="h-5 w-5 mr-1 text-muted-foreground flex-shrink-0" />
-                           )}
-                          <span className="truncate font-medium" title={file.name}>{file.name}</span> 
+                          )}
+                          <span className="truncate font-medium" title={file.name}>{file.name}</span>
                           <span className="text-xs text-muted-foreground flex-shrink-0">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
                         </div>
                         <Button type="button" variant="ghost" size="icon" onClick={() => removeFile(file.id)} className="h-7 w-7 text-muted-foreground hover:text-destructive">
                           <XCircle className="h-5 w-5" />
-                           <span className="sr-only">Remove {file.name}</span>
+                          <span className="sr-only">Remove {file.name}</span>
                         </Button>
                       </li>
                     ))}

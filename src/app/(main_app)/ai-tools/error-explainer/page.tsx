@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Code, Download, Copy, ArrowLeft, Send, Lightbulb } from "lucide-react";
+import { AlertTriangle, Code, Download, Copy, ArrowLeft, Send, Lightbulb, Globe } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
 export default function ErrorExplainerPage() {
   const { toast } = useToast();
@@ -15,6 +16,8 @@ export default function ErrorExplainerPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [explanation, setExplanation] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [code, setCode] = useState<string>("");
+  const [language, setLanguage] = useState<string>("javascript");
 
   const explainError = async () => {
     if (!errorMessage.trim()) {
@@ -27,63 +30,33 @@ export default function ErrorExplainerPage() {
     }
 
     setIsLoading(true);
-    
-    // Simulate AI processing
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // Mock error explanation based on input
-    const mockExplanation = `# Error Analysis
 
-## Error Type: ${errorMessage.includes('TypeError') ? 'TypeError' : errorMessage.includes('ReferenceError') ? 'ReferenceError' : 'Runtime Error'}
+    try {
+      const { explainErrors } = await import('@/ai/flows/explain-errors');
+      const result = await explainErrors({
+        code: code || "// No code provided",
+        error: errorMessage,
+        language: language,
+      });
 
-## What This Error Means:
-This error occurs when ${errorMessage.includes('undefined') ? 'you\'re trying to access a variable or property that doesn\'t exist or hasn\'t been defined' : errorMessage.includes('null') ? 'you\'re trying to access a property on a null or undefined value' : 'there\'s an issue with the data type or value you\'re working with'}.
+      const formattedExplanation = `# Error Analysis\n\n## Explanation:\n${result.explanation}\n\n## Suggested Solution:\n${result.suggestedSolution}\n\n---\n*Generated explanation for: "${errorMessage}"*`;
 
-## Common Causes:
-- ${errorMessage.includes('undefined') ? 'Variable not declared or initialized' : 'Incorrect data type usage'}
-- ${errorMessage.includes('undefined') ? 'Misspelled variable or function name' : 'Null or undefined value passed to function'}
-- ${errorMessage.includes('undefined') ? 'Scope issues (variable not accessible)' : 'Missing required parameters'}
+      setExplanation(formattedExplanation);
 
-## How to Fix It:
-1. **Check Variable Declaration**: Make sure all variables are properly declared before use
-2. **Verify Scope**: Ensure variables are accessible in the current scope
-3. **Add Null Checks**: Use optional chaining (?.) or null checks before accessing properties
-4. **Debug Step by Step**: Add console.log statements to trace the issue
-
-## Example Solution:
-\`\`\`javascript
-// Instead of this (causes error):
-console.log(user.name);
-
-// Do this (safe):
-if (user && user.name) {
-    console.log(user.name);
-}
-
-// Or use optional chaining:
-console.log(user?.name);
-\`\`\`
-
-## Prevention Tips:
-- Always initialize variables before use
-- Use TypeScript for better type safety
-- Implement proper error handling with try-catch blocks
-- Test your code with different data scenarios
-
-## Related Errors:
-- ReferenceError: Similar to this error but for undeclared variables
-- TypeError: Occurs when trying to use a value in an inappropriate way
-
----
-*Generated explanation for: "${errorMessage}"*`;
-
-    setExplanation(mockExplanation);
-    setIsLoading(false);
-    
-    toast({
-      title: "Error Explained",
-      description: "Your error has been analyzed and explained successfully.",
-    });
+      toast({
+        title: "Error Explained",
+        description: "Your error has been analyzed and explained successfully.",
+      });
+    } catch (error) {
+      console.error("Error explaining error:", error);
+      toast({
+        title: "Explanation Failed",
+        description: "An error occurred while analyzing the error. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const copyToClipboard = () => {
@@ -107,15 +80,15 @@ console.log(user?.name);
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={() => router.back()}
           className="mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to AI Tools
         </Button>
-        
+
         <div className="flex items-center gap-3 mb-4">
           <AlertTriangle className="h-8 w-8 text-red-500" />
           <h1 className="text-3xl font-bold">Error Explainer</h1>
@@ -137,17 +110,43 @@ console.log(user?.name);
           <CardContent className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-2 block">
-                Error Message or Stack Trace
+                Error Message or Stack Trace <span className="text-destructive">*</span>
               </label>
               <Textarea
                 placeholder="Paste your error message, stack trace, or console output here. For example: 'TypeError: Cannot read property 'name' of undefined' or 'ReferenceError: user is not defined'"
                 value={errorMessage}
                 onChange={(e) => setErrorMessage(e.target.value)}
-                className="min-h-[200px] font-mono text-sm"
+                className="min-h-[150px] font-mono text-sm"
+                required
               />
             </div>
 
-            <Button 
+            <div>
+              <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                <Code className="h-4 w-4" />
+                Relevant Code (Optional)
+              </label>
+              <Textarea
+                placeholder="Paste the code snippet where the error occurs..."
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="min-h-[150px] font-mono text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                Language
+              </label>
+              <Input
+                placeholder="e.g., javascript, typescript, python"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+              />
+            </div>
+
+            <Button
               onClick={explainError}
               disabled={!errorMessage.trim() || isLoading}
               className="w-full"
@@ -193,7 +192,7 @@ console.log(user?.name);
               <div className="text-center py-12 text-muted-foreground">
                 <Lightbulb className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                 <p>Error explanation will appear here</p>
-                <p className="text-sm">Paste an error message and click "Explain Error" to get started</p>
+                <p className="text-sm">Paste an error message and click &quot;Explain Error&quot; to get started</p>
               </div>
             )}
           </CardContent>

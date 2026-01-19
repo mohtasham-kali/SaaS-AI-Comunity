@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import type { Plan } from '@/types';
-import { CheckCircle, Gem, Loader2, Sparkles, Star, Zap, Group } from 'lucide-react';
+import { CheckCircle, Gem, Loader2, Sparkles, Star, Zap, Group, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -86,7 +86,7 @@ export default function SubscriptionsPage() {
       router.push('/login?redirect=/profile/subscriptions');
     }
   }, [currentUser, authLoading, router]);
-  
+
   useEffect(() => {
     document.title = "Manage Subscription - CodeAssist";
   }, []);
@@ -118,17 +118,17 @@ export default function SubscriptionsPage() {
       </div>
     );
   }
-  
+
   const currentPlanId = currentUser.plan;
 
   const plansToDisplay: PlanDetails[] = plansData.map(p => ({
     ...p,
     isCurrent: p.id === currentPlanId,
-    cta: p.id === currentPlanId 
-      ? "Current Plan" 
-      : ( (currentPlanId === 'free' && (p.id === 'Standard' || p.id === 'Community')) || 
-          (currentPlanId === 'Standard' && p.id === 'Community') 
-        ? "Upgrade" 
+    cta: p.id === currentPlanId
+      ? "Current Plan"
+      : ((currentPlanId === 'free' && (p.id === 'Standard' || p.id === 'Community')) ||
+        (currentPlanId === 'Standard' && p.id === 'Community')
+        ? "Upgrade"
         : "Switch Plan" // Covers downgrades or lateral moves if ever introduced
       ),
   }));
@@ -161,7 +161,7 @@ export default function SubscriptionsPage() {
               <ul className="space-y-2 text-sm">
                 {plan.features.map((feature, index) => (
                   <li key={index} className={`flex items-center ${feature.included ? 'text-foreground' : 'text-muted-foreground line-through'}`}>
-                    {feature.included ? 
+                    {feature.included ?
                       <CheckCircle className={`h-4 w-4 mr-2 flex-shrink-0 text-green-500`} /> :
                       <XCircle className={`h-4 w-4 mr-2 flex-shrink-0 text-destructive/60`} />
                     }
@@ -181,7 +181,7 @@ export default function SubscriptionsPage() {
                 {isUpdatingPlan === plan.id ? (
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 ) : plan.isCurrent ? null : (
-                  plan.id === 'free' ? <Zap className="mr-2 h-5 w-5"/> : <Zap className="mr-2 h-5 w-5" /> 
+                  plan.id === 'free' ? <Zap className="mr-2 h-5 w-5" /> : <Zap className="mr-2 h-5 w-5" />
                 )}
                 {isUpdatingPlan === plan.id ? "Updating..." : plan.cta}
               </Button>

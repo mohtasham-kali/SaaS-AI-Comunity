@@ -9,8 +9,8 @@
  * - AutoDebugCodeOutput - The return type for the autoDebugCode function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const AutoDebugCodeInputSchema = z.object({
   code: z.string().describe('The code to be analyzed for bugs.'),
@@ -34,15 +34,15 @@ export async function autoDebugCode(input: AutoDebugCodeInput): Promise<AutoDebu
 
 const prompt = ai.definePrompt({
   name: 'autoDebugCodePrompt',
-  input: {schema: AutoDebugCodeInputSchema},
-  output: {schema: AutoDebugCodeOutputSchema},
+  input: { schema: AutoDebugCodeInputSchema },
+  output: { schema: AutoDebugCodeOutputSchema },
   prompt: `You are an AI expert in debugging code. You will analyze the provided code snippet for potential bugs and suggest solutions.
 
 Language: {{{language}}}
 Code:
-```
+\`\`\`
 {{{code}}}
-```
+\`\`\`
 
 Bug Analysis:
 Suggested Solutions:
@@ -56,7 +56,7 @@ const autoDebugCodeFlow = ai.defineFlow(
     outputSchema: AutoDebugCodeOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const { output } = await prompt(input);
     return output!;
   }
 );

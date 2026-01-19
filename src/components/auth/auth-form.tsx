@@ -15,7 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "./auth-provider";
+import { useSupabaseAuth } from "./supabase-auth-provider";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -37,17 +37,17 @@ type AuthFormProps = {
 };
 
 export function AuthForm({ mode }: AuthFormProps) {
-  const { login, signup } = useAuth();
+  const { signIn, signUp } = useSupabaseAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const formSchema = mode === 'login' ? loginSchema : signupSchema;
-  type FormValues = z.infer<typeof formSchema>;
+  type FormValues = any;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: mode === 'login' ? { email: "mohtasham.siddiqui17@gmail.com", password: "#Mohtisham123" } : { name: "", email: "", password: "" },
+    defaultValues: mode === 'login' ? { email: "mohtasham.siddiqui17@gmail.com", password: "#Mohtisham123" } : { name: "", email: "", password: "" } as any,
   });
 
   async function onSubmit(values: FormValues) {
@@ -55,13 +55,18 @@ export function AuthForm({ mode }: AuthFormProps) {
     let success = false;
     let errorMessage = "An unexpected error occurred.";
 
+    const email = values.email.trim();
+    const password = values.password;
+
     if (mode === 'login') {
-      success = await login(values.email, values.password);
-      if (!success) errorMessage = "Invalid email or password.";
+      const result = await signIn(email, password);
+      success = !result.error;
+      if (result.error) errorMessage = result.error.message || "Invalid email or password.";
     } else {
       const signupValues = values as z.infer<typeof signupSchema>;
-      success = await signup(signupValues.name, signupValues.email, signupValues.password);
-      if (!success) errorMessage = "Could not create account. Email might be taken.";
+      const result = await signUp(email, password, signupValues.name.trim());
+      success = !result.error;
+      if (result.error) errorMessage = result.error.message || "Could not create account. Email might be taken.";
     }
 
     setIsLoading(false);
@@ -69,9 +74,9 @@ export function AuthForm({ mode }: AuthFormProps) {
     if (success) {
       toast({
         title: mode === 'login' ? "Login Successful" : "Signup Successful",
-        description: "Redirecting to homepage...",
+        description: "Redirecting to dashboard...",
       });
-      router.push('/');
+      router.push('/dashboard');
     } else {
       toast({
         title: mode === 'login' ? "Login Failed" : "Signup Failed",
@@ -96,7 +101,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           {mode === 'signup' && (
             <FormField
               control={form.control}
-              name="name"
+              name={"name" as any}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Name</FormLabel>
@@ -130,6 +135,16 @@ export function AuthForm({ mode }: AuthFormProps) {
                 <FormControl>
                   <Input type="password" placeholder="••••••••" {...field} />
                 </FormControl>
+                {mode === 'login' && (
+                  <div className="flex justify-end">
+                    <Link
+                      href="/forgot-password"
+                      className="text-xs text-muted-foreground hover:text-primary underline-offset-4 hover:underline"
+                    >
+                      Forgot Password?
+                    </Link>
+                  </div>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -140,7 +155,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           </Button>
         </form>
       </Form>
-      
+
       <p className="px-8 text-center text-sm text-muted-foreground mt-6">
         {mode === 'login' ? (
           <>

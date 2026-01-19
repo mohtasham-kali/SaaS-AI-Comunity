@@ -7,8 +7,8 @@
  * - ExplainErrorsOutput - The return type for the explainErrors function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const ExplainErrorsInputSchema = z.object({
   code: z.string().describe('The code snippet containing the error.'),
@@ -29,13 +29,15 @@ export async function explainErrors(input: ExplainErrorsInput): Promise<ExplainE
 
 const prompt = ai.definePrompt({
   name: 'explainErrorsPrompt',
-  input: {schema: ExplainErrorsInputSchema},
-  output: {schema: ExplainErrorsOutputSchema},
+  input: { schema: ExplainErrorsInputSchema },
+  output: { schema: ExplainErrorsOutputSchema },
   prompt: `You are an expert software developer. You will be given a code snippet, an error message, and the programming language. Your task is to explain the error in detail and provide a suggested solution.
 
 Language: {{{language}}}
 Code:
-```{{{language}}}\n{{code}}\n```
+\`\`\`{{{language}}}
+{{code}}
+\`\`\`
 
 Error: {{{error}}}
 
@@ -49,7 +51,7 @@ const explainErrorsFlow = ai.defineFlow(
     outputSchema: ExplainErrorsOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const { output } = await prompt(input);
     return output!;
   }
 );

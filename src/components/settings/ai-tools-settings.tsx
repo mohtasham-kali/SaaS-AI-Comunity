@@ -41,7 +41,7 @@ export function AIToolsSettings() {
   const form = useForm<AIToolsFormValues>({
     resolver: zodResolver(aiToolsSchema),
     defaultValues: {
-      preferredModel: "gpt-5",
+      preferredModel: "gemini-flash",
       codeGenerationEnabled: true,
       errorExplanationEnabled: true,
       bugFixingEnabled: true,
@@ -126,15 +126,15 @@ export function AIToolsSettings() {
                           <SelectValue placeholder="Select an AI model" />
                         </SelectTrigger>
                       </FormControl>
-                                              <SelectContent>
-                          <SelectItem value="gpt-5">GPT-5 - Latest and most powerful</SelectItem>
-                          <SelectItem value="gpt-4">GPT-4 - Most advanced</SelectItem>
-                          <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo - Fast and efficient</SelectItem>
-                          <SelectItem value="claude-3">Claude-3 - Excellent for code</SelectItem>
-                          <SelectItem value="gemini-pro">Gemini Pro - Google's latest</SelectItem>
-                          <SelectItem value="cursor">Cursor - AI-powered code editor</SelectItem>
-                          <SelectItem value="gork">Gork - Specialized for development</SelectItem>
-                        </SelectContent>
+                      <SelectContent>
+                        <SelectItem value="gemini-flash">Gemini Flash - Fast & Efficient (Free)</SelectItem>
+                        <SelectItem value="gemini-pro">Gemini Pro - Google&apos;s latest (Free)</SelectItem>
+                        <SelectItem value="claude-haiku">Claude Haiku - Fast & Cost-effective</SelectItem>
+                        <SelectItem value="claude-sonnet">Claude Sonnet - Balanced Performance</SelectItem>
+                        <SelectItem value="claude-opus">Claude Opus - Most Powerful</SelectItem>
+                        <SelectItem value="mistral-small">Mistral Small - Fast & Open</SelectItem>
+                        <SelectItem value="mistral-large">Mistral Large - High Performance</SelectItem>
+                      </SelectContent>
                     </Select>
                     <FormDescription>
                       Choose the AI model that best suits your development needs.
@@ -146,7 +146,7 @@ export function AIToolsSettings() {
 
               <div className="space-y-4">
                 <h4 className="font-medium">Enable AI Tools</h4>
-                
+
                 <FormField
                   control={form.control}
                   name="codeGenerationEnabled"

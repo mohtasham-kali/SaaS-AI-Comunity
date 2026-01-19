@@ -8,8 +8,8 @@
  * - SummarizeCodeErrorsOutput - The return type for the summarizeCodeErrors function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const SummarizeCodeErrorsInputSchema = z.object({
   errorLog: z
@@ -43,9 +43,9 @@ export async function summarizeCodeErrors(
 
 const prompt = ai.definePrompt({
   name: 'summarizeCodeErrorsPrompt',
-  input: {schema: SummarizeCodeErrorsInputSchema},
-  output: {schema: SummarizeCodeErrorsOutputSchema},
-  prompt: `You are an expert software developer. You will be given an error log, an optional code snippet, and the programming language. Your task is to summarize the error and explain its root cause in a concise manner.\n\nLanguage: {{{language}}}\nCode Snippet:\n```{{{language}}}\n{{codeSnippet}}\n```\n\nError Log: {{{errorLog}}}\n\nSummary: `,
+  input: { schema: SummarizeCodeErrorsInputSchema },
+  output: { schema: SummarizeCodeErrorsOutputSchema },
+  prompt: `You are an expert software developer. You will be given an error log, an optional code snippet, and the programming language. Your task is to summarize the error and explain its root cause in a concise manner.\n\nLanguage: {{{language}}}\nCode Snippet:\n\`\`\`{{{language}}}\n{{codeSnippet}}\n\`\`\`\n\nError Log: {{{errorLog}}}\n\nSummary: `,
 });
 
 const summarizeCodeErrorsFlow = ai.defineFlow(
@@ -55,7 +55,7 @@ const summarizeCodeErrorsFlow = ai.defineFlow(
     outputSchema: SummarizeCodeErrorsOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const { output } = await prompt(input);
     return output!;
   }
 );

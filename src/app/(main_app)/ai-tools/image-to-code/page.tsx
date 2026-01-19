@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Image, Upload, Code, Download, Copy, ArrowLeft, Send } from "lucide-react";
+import { Image as ImageIcon, Upload, Code, Download, Copy, ArrowLeft, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 
@@ -65,10 +65,10 @@ export default function ImageToCodePage() {
     }
 
     setIsLoading(true);
-    
+
     // Simulate AI processing
     await new Promise(resolve => setTimeout(resolve, 3000));
-    
+
     // Mock generated code based on prompt
     const mockCode = `<!DOCTYPE html>
 <html lang="en">
@@ -131,7 +131,7 @@ export default function ImageToCodePage() {
 
     setGeneratedCode(mockCode);
     setIsLoading(false);
-    
+
     toast({
       title: "Code Generated",
       description: "Your code has been generated successfully from the image and prompt.",
@@ -146,30 +146,30 @@ export default function ImageToCodePage() {
     });
   };
 
-      const downloadCode = () => {
-      const element = document.createElement("a");
-      const file = new Blob([generatedCode], { type: "text/plain" });
-      element.href = URL.createObjectURL(file);
-      element.download = `generated-code.html`;
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-    };
+  const downloadCode = () => {
+    const element = document.createElement("a");
+    const file = new Blob([generatedCode], { type: "text/plain" });
+    element.href = URL.createObjectURL(file);
+    element.download = `generated-code.html`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
 
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={() => router.back()}
           className="mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to AI Tools
         </Button>
-        
+
         <div className="flex items-center gap-3 mb-4">
-          <Image className="h-8 w-8 text-blue-500" />
+          <ImageIcon className="h-8 w-8 text-blue-500" />
           <h1 className="text-3xl font-bold">Image to Code</h1>
         </div>
         <p className="text-muted-foreground">
@@ -192,13 +192,13 @@ export default function ImageToCodePage() {
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                 {uploadedImage ? (
                   <div className="space-y-4">
-                    <img 
-                      src={uploadedImage} 
-                      alt="Uploaded" 
+                    <img
+                      src={uploadedImage}
+                      alt="Uploaded"
                       className="max-w-full h-auto max-h-64 mx-auto rounded-lg"
                     />
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       Change Image
@@ -252,7 +252,7 @@ export default function ImageToCodePage() {
 
 
 
-              <Button 
+              <Button
                 onClick={generateCode}
                 disabled={!uploadedImage || !prompt.trim() || isLoading}
                 className="w-full"
@@ -299,7 +299,7 @@ export default function ImageToCodePage() {
               <div className="text-center py-12 text-muted-foreground">
                 <Code className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                 <p>Generated code will appear here</p>
-                <p className="text-sm">Upload an image, add a description, and click "Generate Code" to get started</p>
+                <p className="text-sm">Upload an image, add a description, and click &quot;Generate Code&quot; to get started</p>
               </div>
             )}
           </CardContent>

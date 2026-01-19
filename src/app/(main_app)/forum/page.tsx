@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Post } from '@/types';
-import { getMockPosts } from '@/lib/mock-data';
+import { getQuestions } from '@/lib/supabase-database';
 import { PostCard } from '@/components/posts/post-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Link from 'next/link';
 import { PlusCircle, Search, ListFilter } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/components/auth/auth-provider'; 
+import { useAuth } from '@/components/auth/auth-provider';
 
 export default function ForumPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -22,19 +22,44 @@ export default function ForumPage() {
 
 
   useEffect(() => {
-    if (!authLoading) { 
-        const fetchedPosts = getMockPosts();
-        setPosts(fetchedPosts);
-        setIsLoading(false);
-    }
+    const fetchPosts = async () => {
+      if (!authLoading) {
+        try {
+          const questions = await getQuestions();
+          // Map Question to Post type for compatibility
+          const mappedPosts: Post[] = questions.map(q => ({
+            id: q.id,
+            title: q.title,
+            description: q.description || '',
+            codeSnippet: q.code_snippet || undefined,
+            language: q.language || undefined,
+            tags: q.tags || [],
+            userId: q.user_id,
+            user: q.user,
+            createdAt: q.created_at,
+            comments: [], // TODO: Fetch answers count
+            files: [], // TODO: Handle files
+            upvotes: 0, // TODO: Handle upvotes
+            isResolved: false, // TODO: Handle resolved status
+          }));
+          setPosts(mappedPosts);
+        } catch (error) {
+          console.error("Failed to fetch posts:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchPosts();
   }, [authLoading]);
 
   const filteredAndSortedPosts = posts
-    .filter(post => 
+    .filter(post =>
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       post.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
       post.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.user.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      post.user.username?.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
       if (sortBy === 'latest') {
@@ -44,7 +69,7 @@ export default function ForumPage() {
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       }
       if (sortBy === 'upvotes') {
-        return b.upvotes - a.upvotes;
+        return (b.upvotes || 0) - (a.upvotes || 0);
       }
       return 0;
     });
@@ -73,8 +98,8 @@ export default function ForumPage() {
     <div className="space-y-8">
       <header className="flex flex-col md:flex-row justify-between items-center gap-4 pb-6 border-b border-border">
         <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">CodeAssist Forum</h1>
-            {/* Sub-description removed to match image simplicity */}
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">CodeAssist Forum</h1>
+          {/* Sub-description removed to match image simplicity */}
         </div>
         <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Link href="/new-post">
@@ -134,16 +159,16 @@ const CardSkeleton = () => (
     <Skeleton className="h-4 w-full" /> {/* Description line 1 */}
     <Skeleton className="h-4 w-5/6 mb-3" /> {/* Description line 2 */}
     <div className="flex gap-2 mb-4">
-        <Skeleton className="h-5 w-16 rounded-full" />
-        <Skeleton className="h-5 w-20 rounded-full" />
-        <Skeleton className="h-5 w-18 rounded-full" />
+      <Skeleton className="h-5 w-16 rounded-full" />
+      <Skeleton className="h-5 w-20 rounded-full" />
+      <Skeleton className="h-5 w-18 rounded-full" />
     </div>
     <div className="flex justify-between items-center pt-4 border-t border-border mt-4"> {/* Subtle border top */}
-        <div className="flex gap-4">
-            <Skeleton className="h-5 w-12" /> {/* Upvotes */}
-            <Skeleton className="h-5 w-12" /> {/* Comments */}
-        </div>
-        <Skeleton className="h-9 w-28" /> {/* View Post Button */}
+      <div className="flex gap-4">
+        <Skeleton className="h-5 w-12" /> {/* Upvotes */}
+        <Skeleton className="h-5 w-12" /> {/* Comments */}
+      </div>
+      <Skeleton className="h-9 w-28" /> {/* View Post Button */}
     </div>
   </div>
 );
